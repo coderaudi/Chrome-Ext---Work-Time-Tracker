@@ -249,3 +249,12 @@ footer {
 	text-align: center;
 	margin-top: 6px;
 }
+/* Gradient progress header */
+.header-bar {
+	background: linear-gradient(to right, #e63946 0%, #f4a261 50%, #2a9d8f 100%);
+	background-size: 0% 100%;
+	background-repeat: no-repeat;
+	transition: background-size 0.5s ease;
+	color: white;
+	/* Optional: if text needs contrast */
+}

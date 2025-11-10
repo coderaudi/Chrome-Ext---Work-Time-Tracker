@@ -1,4 +1,4 @@
-// Audi Time Tracker with live-updating Remaining Time
+// Audi Time Tracker with live-updating Remaining Time & Gradient Header Progress
 const clockEl = document.getElementById('clock');
 const todayLine = document.getElementById('todayLine');
 const inTimeInput = document.getElementById('inTime');
@@ -7,13 +7,13 @@ const clearBtn = document.getElementById('clearBtn');
 const elapsedEl = document.getElementById('elapsed');
 const expectedCheckoutEl = document.getElementById('expectedCheckout');
 const remainingEl = document.getElementById('remaining');
-
+const headerBar = document.querySelector('.header-bar');
+const testBtn = document.getElementById("testBtn");
 
 const STORAGE_KEY_PREFIX = 'audi_in_';
 
-function pad(n) {
-	return n.toString().padStart(2, '0');
-}
+// Utilities
+function pad(n) { return n.toString().padStart(2, '0'); }
 
 function formatDateLine(d) {
 	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -32,6 +32,22 @@ function secondsToHrMin(sec) {
 	return `${hr} hr ${min} min ${s}s`;
 }
 
+function parseTimeStr(timeStr) {
+	if (!timeStr) return null;
+	const [h, m] = timeStr.split(':').map(Number);
+	const now = new Date();
+	return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+}
+
+function formatTime(d) {
+	return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function formatHHMM(d) {
+	return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// Chrome storage helpers
 function loadSaved(callback) {
 	const key = STORAGE_KEY_PREFIX + nowISODate();
 	chrome.storage.local.get([key], res => callback(res[key] || null));
@@ -49,22 +65,16 @@ function clearToday(cb) {
 	chrome.storage.local.remove([key], cb);
 }
 
-function parseTimeStr(timeStr) {
-	if (!timeStr) return null;
-	const [h, m] = timeStr.split(':').map(Number);
+// Progress calculation
+function updateHeaderProgress(inDate) {
 	const now = new Date();
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+	const workSec = 7 * 3600; // 7 hours
+	const elapsedSec = Math.floor((now - inDate) / 1000);
+	let percent = Math.min((elapsedSec / workSec) * 100, 100);
+	headerBar.style.backgroundSize = `${percent}% 100%`;
 }
 
-function formatTime(d) {
-	return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-function formatHHMM(d) {
-	return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-// 🕒 This runs every second to refresh everything live
+// Main live tick
 let savedData = null;
 function tick() {
 	const now = new Date();
@@ -74,27 +84,32 @@ function tick() {
 		elapsedEl.textContent = '--';
 		expectedCheckoutEl.textContent = '--:--';
 		remainingEl.textContent = 'Time Remaining: --';
-		return;
-	}
+	  headerBar.style.backgroundSize = '0% 100%';
+	  return;
+  }
 
 	const inDate = parseTimeStr(savedData.inTime);
 	const elapsedSec = Math.floor((now - inDate) / 1000);
 	elapsedEl.textContent = secondsToHrMin(elapsedSec);
 
 	const checkout = new Date(inDate.getTime() + 7 * 3600 * 1000);
-	expectedCheckoutEl.textContent = `${formatHHMM(checkout)}`;
+	expectedCheckoutEl.textContent = formatHHMM(checkout);
 
 	const remainingSec = Math.floor((checkout - now) / 1000);
 	if (remainingSec > 0) {
 		const hrs = Math.floor(remainingSec / 3600);
-		const mins = Math.floor((remainingSec % 3600) / 60);
-		const secs = remainingSec % 60;
-		remainingEl.textContent = `Remaining: ${hrs} hr ${mins} min ${secs}s`;
-	} else {
-		remainingEl.textContent = `✅ 7 hours completed!`;
-	}
+	  const mins = Math.floor((remainingSec % 3600) / 60);
+	  const secs = remainingSec % 60;
+	  remainingEl.textContent = `Remaining: ${hrs} hr ${mins} min ${secs}s`;
+  } else {
+	  remainingEl.textContent = `✅ 7 hours completed!`;
+  }
+
+	// Update header gradient progress
+	updateHeaderProgress(inDate);
 }
 
+// Initialization
 function init() {
 	todayLine.textContent = formatDateLine(new Date());
 	loadSaved(saved => {
@@ -105,14 +120,15 @@ function init() {
 	});
 }
 
+// Event Listeners
 saveBtn.addEventListener('click', () => {
 	const val = inTimeInput.value;
 	if (!val) return alert('Please enter IN time.');
 	savedData = { inTime: val, savedAt: new Date().toISOString() };
 	saveToday(savedData, () => {
 		saveBtn.textContent = 'Saved ✓';
-		setTimeout(() => (saveBtn.textContent = 'Save IN'), 900);
-	});
+	  setTimeout(() => (saveBtn.textContent = 'Check IN'), 900);
+  });
 });
 
 clearBtn.addEventListener('click', () => {
@@ -124,17 +140,9 @@ clearBtn.addEventListener('click', () => {
 	});
 });
 
-
-// existing popup.js code...
-// (keep your live time logic exactly as before)
-
-const testBtn = document.getElementById("testBtn");
-
-// Send message to background.js for test notification
-testBtn.addEventListener("click", () => {
+testBtn.addEventListener('click', () => {
 	chrome.runtime.sendMessage({ type: "TEST_NOTIFICATION" });
 });
 
-
-
+// Start
 init();
