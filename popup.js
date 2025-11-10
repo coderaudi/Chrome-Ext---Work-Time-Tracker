@@ -65,13 +65,48 @@ function clearToday(cb) {
 	chrome.storage.local.remove([key], cb);
 }
 
+
+// Function to interpolate colors
+function interpolateColor(color1, color2, factor) {
+	const result = color1.slice();
+	for (let i = 0; i < 3; i++) {
+		result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
+	}
+	return result;
+}
+
+function rgbToCSS(rgb) {
+	return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+}
+
+
+
 // Progress calculation
 function updateHeaderProgress(inDate) {
 	const now = new Date();
 	const workSec = 7 * 3600; // 7 hours
 	const elapsedSec = Math.floor((now - inDate) / 1000);
-	let percent = Math.min((elapsedSec / workSec) * 100, 100);
-	headerBar.style.backgroundSize = `${percent}% 100%`;
+	let progress = Math.min(Math.max(elapsedSec / workSec, 0), 1); // 0 → 1
+	const percent = Math.floor(progress * 100);
+
+	let progressColor = '';
+	let remainingColor = '';
+
+	if (progress <= 0.5) {
+		// first half: progress in orange, remaining in gray
+		progressColor = '#ece07c';
+		remainingColor = '#eee';
+	} else {
+		// second half: progress in green, remaining in red
+		progressColor = '#bef2b6';
+		remainingColor = '#f3cbcb';
+	}
+
+	// Apply linear-gradient: progress portion first, then remaining
+	// e.g., 30% progress: 30% orange, 70% gray
+	headerBar.style.background = `linear-gradient(to right, 
+	  ${progressColor} 0%, ${progressColor} ${percent}%, 
+	  ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
 }
 
 // Main live tick
@@ -106,7 +141,10 @@ function tick() {
   }
 
 	// Update header gradient progress
-	updateHeaderProgress(inDate);
+	if (savedData && savedData.inTime) {
+		const inDate = parseTimeStr(savedData.inTime);
+		updateHeaderProgress(inDate); // <- update header progress
+	}
 }
 
 // Initialization
