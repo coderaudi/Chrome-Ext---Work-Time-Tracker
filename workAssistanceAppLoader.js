@@ -19,11 +19,11 @@
 
   try{
     // load core fragments from src/components and src/screens
-    await loadFragment('comp-header', 'src/components/header.html', '<header class="header-bar"><div class="header-left"><h1>Work Assistance</h1><div class="small" id="todayLine"></div></div></header>');
-    await loadFragment('comp-clock', 'src/components/clock.html');
+  await loadFragment('screen-header', 'src/screens/header/header.html', '<header class="header-bar"><div class="header-left"><h1>Work Assistance</h1><div class="small" id="todayLine"></div></div></header>');
+  await loadFragment('screen-clock', 'src/screens/progressClock/clock.html');
   // health component moved to src/screens/healthAndWork/
-  await loadFragment('comp-health', 'src/screens/healthAndWork/health.html');
-    await loadFragment('comp-input', 'src/components/input.html');
+  await loadFragment('screen-health', 'src/screens/healthAndWork/health.html');
+  await loadFragment('screen-checkin', 'src/screens/workCheckIn/input.html');
 
     // load health behavior if available
     try{
@@ -38,10 +38,10 @@
 
     // footer
     try{
-      const footerPlaceholder = document.getElementById('footerPlaceholder');
+  const footerPlaceholder = document.getElementById('screen-footer');
       let footerLoaded = false;
       try{
-        const footerResp = await fetch(resolve('src/components/footer.html'));
+  const footerResp = await fetch(resolve('src/screens/footer/footer.html'));
         if (footerResp.ok){
           const footerHtml = await footerResp.text();
           if (footerPlaceholder) footerPlaceholder.innerHTML = footerHtml;
@@ -49,7 +49,7 @@
         }
       }catch(e){ console.warn('Footer fetch error', e) }
 
-      const footerCss = resolve('src/components/footer.css');
+  const footerCss = resolve('src/screens/footer/footer.css');
       if (!document.querySelector(`link[href="${footerCss}"]`)){
         const footerLink = document.createElement('link');
         footerLink.rel = 'stylesheet';
@@ -57,7 +57,7 @@
         document.head.appendChild(footerLink);
       }
 
-      const footerJs = resolve('src/components/footer.js');
+  const footerJs = resolve('src/screens/footer/footer.js');
       if (!document.querySelector(`script[src="${footerJs}"]`)){
         const scr = document.createElement('script');
         scr.src = footerJs;
