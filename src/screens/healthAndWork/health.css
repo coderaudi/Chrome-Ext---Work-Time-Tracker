@@ -1,7 +1,70 @@
-/* Health & Work card styles */
-.health-card { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; box-shadow: 0 2px 6px var(--shadow); }
-.health-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:6px }
-.health-content { margin-top:8px; display:none; font-size:13px; color:var(--muted) }
-.health-open .health-content { display:block }
-.health-open .health-toggle .chev { transform:rotate(90deg) }
-.chev { transition: transform 0.2s ease }
+/* src/screens/healthAndWork/health.css */
+
+/* ===== HEALTH & WORK BALANCE SECTION ===== */
+.health-card {
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	box-shadow: 0 2px 6px var(--shadow);
+	overflow: hidden;
+	transition: all 0.3s ease;
+}
+
+/* Header toggle area */
+.health-toggle {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 12px;
+	background: linear-gradient(90deg, var(--accent), var(--accent-light));
+	color: #fff;
+	cursor: pointer;
+	font-weight: 600;
+	border-radius: 10px 10px 0 0;
+	transition: background 0.3s ease;
+}
+
+.health-toggle:hover {
+	background: var(--accent-light);
+}
+
+.health-toggle .chev {
+	transition: transform 0.3s ease;
+}
+
+.health-card.health-open .chev {
+	transform: rotate(90deg);
+}
+
+/* Content area */
+.health-content {
+	display: none;
+	padding: 12px;
+	font-size: 13px;
+	color: var(--muted);
+	background: var(--card);
+}
+
+.health-card.health-open .health-content {
+	display: block;
+}
+
+/* Button */
+.health-notify-btn {
+	width: 100%;
+	margin-top: 10px;
+	padding: 8px 10px;
+	border: none;
+	border-radius: 8px;
+	background: var(--accent);
+	color: #fff;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	box-shadow: 0 2px 4px var(--shadow);
+}
+
+.health-notify-btn:hover {
+	background: var(--accent-light);
+	transform: translateY(-1px);
+}
