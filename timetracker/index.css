@@ -1,3 +1,17 @@
+/* Minimal styles copied/adapted from root styles.css for popup UI */
+:root{--bg:#fff;--muted:#666}
+body{font-family:Segoe UI, sans-serif;background:var(--bg);color:#222;padding:12px;width:360px}
+.header-bar{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;margin-bottom:10px}
+.header-left h1{font-size:16px;margin:0}
+.small{font-size:12px;color:var(--muted)}
+.clock-card{background:#fafafa;padding:10px;border-radius:8px;margin-bottom:10px}
+.time-grid{display:flex;justify-content:space-between}
+.time-block{flex:1}
+.time-value{font-weight:600;font-size:18px}
+.controls{margin-top:8px}
+button{padding:8px 10px;border-radius:6px;border:0;background:#0b63d6;color:#fff;cursor:pointer}
+button.ghost{background:#eee;color:#333}
+
 :root {
 	--bg: #ffffff;
 	--card: #fafafa;
@@ -265,4 +279,5 @@ footer {
 	
 		color: #bef2b6;
 			background: #ece07c;
-}
+	}
+

@@ -1,0 +1,7 @@
+/* Health & Work card styles */
+.health-card { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 8px; box-shadow: 0 2px 6px var(--shadow); }
+.health-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:6px }
+.health-content { margin-top:8px; display:none; font-size:13px; color:var(--muted) }
+.health-open .health-content { display:block }
+.health-open .health-toggle .chev { transform:rotate(90deg) }
+.chev { transition: transform 0.2s ease }

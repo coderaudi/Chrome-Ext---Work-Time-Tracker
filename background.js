@@ -142,6 +142,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResp) => {
 			sendResp({ ok: true, message: 'Shift complete test sent.' });
 			break;
 
+		case 'HEALTH_REMINDER':
+			sendNotification(
+				'Take care of your health',
+				'Take care of your health while working !!!'
+			);
+			sendResp({ ok: true, message: 'Health reminder notification sent.' });
+			break;
+
 		default:
 			console.warn('Unknown message type:', msg.type);
 			break;
@@ -149,4 +157,55 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResp) => {
 
 	// Keep the message channel open if sendResp is used asynchronously
 	return true;
+});
+
+// When user clicks a notification body, show a custom follow-up message.
+chrome.notifications.onClicked.addListener((notificationId) => {
+	console.log('Notification clicked:', notificationId);
+	// Custom follow-up notification
+	chrome.notifications.create({
+		type: 'basic',
+		iconUrl: 'icons/icon128.png',
+		title: 'Thanks for checking!',
+		message: 'You clicked the reminder — don\'t forget to finish up and logout on time.',
+		priority: 2
+	}, id => console.log('Follow-up notification created:', id));
+});
+
+// Optional: handle notification buttons (if any are added later)
+chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
+	console.log('Notification button clicked:', notificationId, buttonIndex);
+	if (buttonIndex === 0) {
+		// Example: snooze — notify user it's snoozed
+		chrome.notifications.create({
+			type: 'basic',
+			iconUrl: 'icons/icon128.png',
+			title: 'Snoozed',
+			message: 'Reminder snoozed for 5 minutes.',
+			priority: 2
+		});
+		// Create a short alarm to re-notify after 5 minutes
+		chrome.alarms.create(`snooze_${Date.now()}`, { delayInMinutes: 5 });
+	} else {
+		chrome.notifications.create({
+			type: 'basic',
+			iconUrl: 'icons/icon128.png',
+			title: 'Dismissed',
+			message: 'Reminder dismissed.',
+			priority: 2
+		});
+	}
+});
+
+// Handle snooze alarms (re-create a reminder notification)
+chrome.alarms.onAlarm.addListener((alarm) => {
+	if (alarm.name && alarm.name.startsWith('snooze_')) {
+		chrome.notifications.create({
+			type: 'basic',
+			iconUrl: 'icons/icon128.png',
+			title: 'Snoozed Reminder ⏰',
+			message: 'This is your snoozed reminder — time to wrap up.',
+			priority: 2
+		});
+	}
 });
