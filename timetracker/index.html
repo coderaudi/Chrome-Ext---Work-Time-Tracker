@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Work Time Tracker</title>
+  <link href="index.css" rel="stylesheet" />
+  <meta name="description" content="Time tracker popup UI (development copy)." />
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <header class="header-bar">
+      <div class="header-left">
+        <h1>Welcome WTT!</h1>
+        <div class="small" id="todayLine"></div>
+      </div>
+      <div class="header-right">
+        <button id="testBtn" class="notify-btn" title="Send Test Notification">
+          <svg xmlns="http://www.w3.org/2000/svg" class="bell-icon" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CARD -->
+    <section class="clock-card">
+      <div class="card-top">
+        <div class="label">Today’s Progress</div>
+        <div id="remaining" class="remaining-top">--</div>
+      </div>
+
+      <div class="time-grid">
+        <div class="time-block">
+          <div class="title">Current Time</div>
+          <div id="clock" class="time-value">--:--:--</div>
+        </div>
+
+        <div class="time-block">
+          <div class="title">Checkout At</div>
+          <div id="expectedCheckout" class="time-value accent">--:--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INPUT SECTION -->
+    <section class="in-time-section">
+      <label for="inTime">IN time</label>
+      <input id="inTime" type="time" step="60" />
+      <div class="controls">
+        <button id="saveBtn">Check IN</button>
+        <button id="clearBtn" class="ghost">Reset</button>
+      </div>
+      <div class="info">
+        <div>Elapsed since IN: <strong id="elapsed">--</strong></div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <small>🔒 Local data only · Built by <strong>[Abhijeet K]</strong></small>
+
+    </footer>
+
+    <script src="index.js"></script>
+  </div>
+</body>
+
+</html>
