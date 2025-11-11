@@ -1,72 +1,115 @@
-// src/screens/progressClock/clock.js
-(() => {
-	const clockEl = document.getElementById('clock');
-	const remainingEl = document.getElementById('remaining');
-	const expectedCheckoutEl = document.getElementById('expectedCheckout');
+// src/screens/workCheckIn/progressClock/clock.js
 
-	if (!clockEl) return;
+// DOM Elements
+const clockEl = document.getElementById('clock');
+const todayLine = document.getElementById('todayLine');
+const expectedCheckoutEl = document.getElementById('expectedCheckout');
+const remainingEl = document.getElementById('remaining');
+const headerBar = document.querySelector('.header-bar');
 
-	const WORK_HOURS = 9; // default working hours duration
+// Constants
+const WORK_HOURS = 7; // 7 hours work day
 
-	function pad(n) { return n.toString().padStart(2, '0'); }
+// Utility functions
+function pad(n) { return n.toString().padStart(2, '0'); }
 
-	let checkInDate = null; // will store today's check-in time
-	let checkoutDate = null; // will store computed checkout time
+function formatTime(d) {
+	return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
 
-	function secondsToHrMin(sec) {
-		const hr = Math.floor(sec / 3600);
-		const min = Math.floor((sec % 3600) / 60);
-		const s = sec % 60;
-		return `${hr} hr ${min} min ${s}s`;
+function formatHHMM(d) {
+	return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatDateLine(d) {
+	const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+	const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	return `${days[d.getDay()]}, ${pad(d.getDate())} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function parseTimeStr(timeStr) {
+	if (!timeStr) return null;
+	const [h, m] = timeStr.split(':').map(Number);
+	const now = new Date();
+	return new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+}
+
+// Progress Bar Update
+function updateHeaderProgress(inDate) {
+	if (!headerBar || !inDate) return;
+
+	const now = new Date();
+	const workSec = WORK_HOURS * 3600;
+	const elapsedSec = Math.floor((now - inDate) / 1000);
+	const progress = Math.min(Math.max(elapsedSec / workSec, 0), 1); // 0 → 1
+	const percent = Math.floor(progress * 100);
+
+	let progressColor = '';
+	let remainingColor = '';
+
+	if (progress < 0.5) {
+		// Less than 50% done → yellow + gray
+		progressColor = '#ece07c';
+		remainingColor = '#eee';
+	} else {
+		// 50% or more done → green + red
+		progressColor = '#8bd98b';
+		remainingColor = '#f08080';
 	}
 
-	// Function to update the clock and remaining time
-	function updateClock() {
-		const now = new Date();
-		clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+	headerBar.style.background = `linear-gradient(to right, 
+        ${progressColor} 0%, ${progressColor} ${percent}%, 
+        ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
+}
 
-		if (checkInDate && checkoutDate) {
-			let remainingMs = checkoutDate - now;
-			if (remainingMs < 0) remainingMs = 0;
+// Global variable for check-in
+let checkInTime = null;
 
-			// Today's Progress (remaining time)
-			const remH = Math.floor(remainingMs / (1000 * 60 * 60));
-			const remM = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-			const remS = Math.floor((remainingMs % (1000 * 60)) / 1000);
-			remainingEl.textContent = `${remH} hr ${remM} min ${remS}s`;
+// Tick function to update UI every second
+function tick() {
+	const now = new Date();
+	if (clockEl) clockEl.textContent = formatTime(now);
 
-			// Color coding
-			if (remainingMs > 3 * 3600 * 1000) {
-				remainingEl.style.color = 'green';
-			} else if (remainingMs > 1 * 3600 * 1000) {
-				remainingEl.style.color = 'orange';
-			} else {
-				remainingEl.style.color = 'red';
-			}
-
-			// Checkout At
-			expectedCheckoutEl.textContent = `${pad(checkoutDate.getHours())}:${pad(checkoutDate.getMinutes())}`;
-		} else {
-			remainingEl.textContent = '--';
-			expectedCheckoutEl.textContent = '--:--';
-			remainingEl.style.color = '';
-		}
+	if (!checkInTime) {
+		if (expectedCheckoutEl) expectedCheckoutEl.textContent = '--:--';
+		if (remainingEl) remainingEl.textContent = 'Remaining: --';
+		updateHeaderProgress(null);
+		return;
 	}
 
-	// Function to set check-in time from checkIn.js
-	window.setCheckInTime = (inTimeStr) => {
-		if (!inTimeStr) {
-			checkInDate = null;
-			checkoutDate = null;
-		} else {
-			const [h, m] = inTimeStr.split(':').map(Number);
-			const now = new Date();
-			checkInDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-			checkoutDate = new Date(checkInDate.getTime() + WORK_HOURS * 3600 * 1000);
-		}
-		updateClock(); // update immediately
-	};
+	const inDate = parseTimeStr(checkInTime);
+	const checkout = new Date(inDate.getTime() + WORK_HOURS * 3600 * 1000);
 
-	// Update clock every second
-	setInterval(updateClock, 1000);
-})();
+	// Checkout time
+	if (expectedCheckoutEl) expectedCheckoutEl.textContent = formatHHMM(checkout);
+
+	// Remaining time
+	const remainingSec = Math.floor((checkout - now) / 1000);
+	if (remainingSec > 0) {
+		const hrs = Math.floor(remainingSec / 3600);
+		const mins = Math.floor((remainingSec % 3600) / 60);
+		const secs = remainingSec % 60;
+		if (remainingEl) remainingEl.textContent = `Remaining: ${hrs} hr ${mins} min ${secs}s`;
+	} else {
+		if (remainingEl) remainingEl.textContent = '✅ Work completed!';
+	}
+
+	// Update progress bar
+	updateHeaderProgress(inDate);
+}
+
+// Set check-in time from outside (from checkIn.js)
+window.setCheckInTime = function (timeStr) {
+	checkInTime = timeStr;
+	tick(); // update UI immediately
+};
+
+// Initialize
+function initClock() {
+	if (todayLine) todayLine.textContent = formatDateLine(new Date());
+	tick();
+	setInterval(tick, 1000);
+}
+
+// Run
+initClock();
