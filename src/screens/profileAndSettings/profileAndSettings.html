@@ -1,0 +1,28 @@
+<section id="profileCard" class="health-card" aria-labelledby="profileHeading">
+	<div class="health-toggle" role="button" aria-expanded="false">
+		<div id="profileHeading"><strong>⚙️ Profile & Settings</strong></div>
+		<div class="chev">▶</div>
+	</div>
+
+	<div class="health-content">
+		<div class="profile-form">
+			<label>
+				Name:
+				<input type="text" id="profileName" placeholder="Enter your name" />
+			</label>
+			<label>
+				Password:
+				<input type="password" id="profilePassword" placeholder="Set a password" />
+			</label>
+			<label>
+				Default Reminder:
+				<select id="profileDefaultReminder">
+					<option value="water">💧 Water</option>
+					<option value="eye">👀 Eye</option>
+					<option value="stretch">🏃 Walk / Stretch</option>
+				</select>
+			</label>
+			<button id="saveProfileBtn" class="health-notify-btn">Save Settings</button>
+		</div>
+	</div>
+</section>

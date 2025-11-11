@@ -58,12 +58,11 @@ function showNotification(title, message) {
 }
 
 // Toggle a reminder
-function toggleReminder(type, btn) {
+function toggleReminder(type, box) {
   if (reminderIntervals[type]) {
     clearInterval(reminderIntervals[type]);
     delete reminderIntervals[type];
-    btn.classList.remove('active');
-    btn.textContent = 'Start';
+    box.classList.remove('active');
   } else {
     const { title, message, interval } = REMINDERS[type];
 
@@ -73,22 +72,17 @@ function toggleReminder(type, btn) {
     // Start interval
     reminderIntervals[type] = setInterval(() => showNotification(title, message), interval);
 
-    btn.classList.add('active');
-    btn.textContent = 'Stop';
+    box.classList.add('active');
   }
 }
 
 
 // Attach buttons
-document.querySelectorAll('.reminder-btn').forEach(btn => {
-  const type = btn.dataset.type;
-  btn.addEventListener('click', () => {
-    // Send message to background to start reminder
-    chrome.runtime.sendMessage({ type: 'START_HEALTH_REMINDER', reminderType: type });
-
-    // Update UI button
-    btn.classList.add('active');
-    btn.textContent = 'Reminder Set';
+// Attach click event to the whole card instead of the button
+document.querySelectorAll('.health-box').forEach(box => {
+  const type = box.dataset.type;
+  box.addEventListener('click', () => {
+    toggleReminder(type, box);
   });
 });
 

@@ -1,0 +1,85 @@
+/* src/screens/profileAndSettings/profileAndSettings.css */
+.profile-card {
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	padding: 15px;
+	max-width: 350px;
+	box-shadow: 0 2px 6px var(--shadow);
+	font-family: sans-serif;
+}
+
+.profile-card h2 {
+	margin-bottom: 15px;
+	font-size: 18px;
+	color: var(--accent);
+}
+
+.form-group {
+	margin-bottom: 12px;
+	display: flex;
+	flex-direction: column;
+}
+
+.form-group label {
+	font-size: 13px;
+	margin-bottom: 4px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+	padding: 8px;
+	font-size: 14px;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+}
+
+.reminder-checkboxes label {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 10px;
+	font-size: 13px;
+}
+
+#saveProfileBtn {
+	margin-top: 10px;
+	padding: 8px 12px;
+	background: var(--accent);
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+#saveProfileBtn:hover {
+	background: var(--accent-light);
+}
+
+#statusMsg {
+	margin-top: 8px;
+	font-size: 12px;
+	color: green;
+}
+
+.profile-form label {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 10px;
+	font-size: 13px;
+	color: var(--muted);
+}
+
+.profile-form input,
+.profile-form select {
+	padding: 6px 8px;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+	margin-top: 4px;
+	font-size: 13px;
+}
+
+#saveProfileBtn {
+	margin-top: 10px;
+	cursor: pointer;
+}

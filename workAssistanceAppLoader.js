@@ -128,6 +128,15 @@
       null,                                    // CSS (if any)
       'src/screens/progressClock/clock.js'     // JS
     );
+
+    await componentLoader.loadInto(
+      document.getElementById('screen-profileAndSetting'), // placeholder
+      'src/screens/profileAndSettings/profileAndSettings.html', // HTML
+      'src/screens/profileAndSettings/profileAndSettings.css',  // CSS
+      'src/screens/profileAndSettings/profileAndSettings.js'    // JS
+    );
+
+
     await loadFragment('screen-health', 'src/screens/healthAndWork/health.html');
     await loadFragment('screen-checkin', 'src/screens/workCheckIn/checkIn.html');
 

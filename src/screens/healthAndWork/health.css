@@ -127,3 +127,44 @@
 .reminder-btn.active {
 	background: #28a745;
 }
+.health-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+	margin-top: 10px;
+}
+
+.health-box {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	/* ensures spacing between content */
+	padding: 10px 8px;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	text-align: center;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s, box-shadow 0.2s;
+	height: 140px;
+	/* fixed height for uniformity */
+	cursor: pointer;
+}
+
+.health-box .icon {
+	font-size: 22px;
+	margin-bottom: 6px;
+}
+
+.health-box .title {
+	font-size: 13px;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+/* Optional: visual highlight for active reminder */
+.health-box.active {
+	border: 2px solid var(--accent);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
