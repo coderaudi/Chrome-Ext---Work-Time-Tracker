@@ -1,4 +1,4 @@
-// Timetracker UI script (moved from popup.js)
+// Work Assistance UI script (moved from timetracker/index.js)
 const STORAGE_KEY_PREFIX = 'audi_in_';
 
 function pad(n) { return n.toString().padStart(2, '0'); }
@@ -180,4 +180,57 @@ function init() {
 }
 
 // Expose initializer so external loaders can call when components are present
-window.timetrackerInit = init;
+window.workAssistanceInit = init;
+// index.js (popup script)
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const testBtn = document.getElementById('testNotif');
+const test1hr = document.getElementById('test1hr');
+const test5min = document.getElementById('test5min');
+const status = document.getElementById('status');
+
+function setStatus(text) {
+	status.textContent = 'Status: ' + text;
+}
+
+startBtn.addEventListener('click', async () => {
+	// Save current time as IN in storage
+	const now = new Date();
+	const hh = now.getHours().toString().padStart(2, '0');
+	const mm = now.getMinutes().toString().padStart(2, '0');
+	const key = 'audi_in_' + now.toISOString().slice(0,10);
+	await chrome.storage.local.set({ [key]: { inTime: `${hh}:${mm}` } });
+	setStatus('shift started at ' + `${hh}:${mm}`);
+});
+
+stopBtn.addEventListener('click', async () => {
+	// Remove today's in time
+	const key = 'audi_in_' + new Date().toISOString().slice(0,10);
+	await chrome.storage.local.remove([key]);
+	setStatus('shift stopped');
+});
+
+function sendTest(type) {
+	chrome.runtime.sendMessage({ type }, (resp) => {
+		if (resp && resp.ok) {
+			setStatus(resp.message);
+		} else {
+			setStatus('no response');
+		}
+	});
+}
+
+testBtn.addEventListener('click', () => sendTest('TEST_NOTIFICATION'));
+test1hr.addEventListener('click', () => sendTest('TEST_1HR'));
+test5min.addEventListener('click', () => sendTest('TEST_5MIN'));
+
+// On load, show current stored IN time if any
+(async function init() {
+	const key = 'audi_in_' + new Date().toISOString().slice(0,10);
+	const res = await chrome.storage.local.get([key]);
+	if (res && res[key] && res[key].inTime) {
+		setStatus('shift started at ' + res[key].inTime);
+	} else {
+		setStatus('idle');
+	}
+})();
