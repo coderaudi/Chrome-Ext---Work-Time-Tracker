@@ -16,6 +16,23 @@
       <li><a href="README.md">README</a></li>
     </ul>
   </main>
+  <!-- Footer injected from footer/footer.html -->
+  <div id="devFooterPlaceholder"></div>
+  <script>
+    (async function(){
+      try{
+        const resp = await fetch('footer/footer.html');
+        if (resp.ok){
+          const html = await resp.text();
+          document.getElementById('devFooterPlaceholder').innerHTML = html;
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'footer/footer.css';
+          document.head.appendChild(link);
+        }
+      }catch(e){console.warn('Failed to load dev footer', e)}
+    })();
+  </script>
   <script src="index.js"></script>
 </body>
 </html>

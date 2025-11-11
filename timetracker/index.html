@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Work Time Tracker</title>
   <link href="index.css" rel="stylesheet" />
+  <link href="../healthAndWork/health.css" rel="stylesheet" />
   <meta name="description" content="Time tracker popup UI (development copy)." />
 </head>
 
@@ -49,6 +50,17 @@
       </div>
     </section>
 
+  <!-- HEALTH & WORK BALANCE SECTION (inlined) -->
+  <section id="healthCard" class="health-card" aria-labelledby="healthHeading">
+    <div class="health-toggle" role="button" aria-expanded="false">
+      <div id="healthHeading"><strong>Health & Work Balance</strong></div>
+      <div class="chev">▶</div>
+    </div>
+    <div class="health-content">
+      <p>Keep your health and work balance: drink water every 1 hour, take short stretch breaks, and rest your eyes regularly.</p>
+    </div>
+  </section>
+
     <!-- INPUT SECTION -->
     <section class="in-time-section">
       <label for="inTime">IN time</label>
@@ -62,13 +74,42 @@
       </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer>
-      <small>🔒 Local data only · Built by <strong>[Abhijeet K]</strong></small>
+  <!-- FOOTER (loaded from footer/footer.html) -->
+  <div id="footerPlaceholder"></div>
 
-    </footer>
+  <script>
+    // Load the HTML fragment for health card and app footer with robust fallbacks
+    (async function(){
+      // Health section is inlined; attach behavior by loading health.js
+      try{
+        const healthScript = document.createElement('script');
+        healthScript.src = '../healthAndWork/health.js';
+        document.body.appendChild(healthScript);
+      }catch(e){console.warn('Failed to load health script', e)}
 
-    <script src="index.js"></script>
+      // Load app footer from dedicated folder
+      try{
+        const footerResp = await fetch('../footer/footer.html');
+        if (footerResp.ok){
+          const footerHtml = await footerResp.text();
+          const footerPlaceholder = document.getElementById('footerPlaceholder');
+          if (footerPlaceholder) footerPlaceholder.innerHTML = footerHtml;
+        } else {
+          console.warn('Footer fetch failed:', footerResp.status);
+        }
+
+        // Load footer CSS and script
+        const footerLink = document.createElement('link');
+        footerLink.rel = 'stylesheet';
+        footerLink.href = '../footer/footer.css';
+        document.head.appendChild(footerLink);
+        const scr = document.createElement('script');
+        scr.src = '../footer/footer.js';
+        document.body.appendChild(scr);
+      }catch(e){console.warn('Failed to load footer fragment or assets', e)}
+    })();
+  </script>
+  <script src="index.js"></script>
   </div>
 </body>
 
