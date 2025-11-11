@@ -1,0 +1,44 @@
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --text: #222222;
+  --muted: #6b7280;
+  --accent: #2563eb;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0b1220;
+  --text: #e6eef8;
+  --muted: #9aa6b2;
+  --accent: #60a5fa;
+}
+
+.theme-toggle {
+  display: inline-block;
+}
+
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.theme-btn .icon { font-size: 1rem; }
+.theme-btn .moon { display: none; }
+
+:root[data-theme="dark"] .theme-btn .sun { display: none; }
+:root[data-theme="dark"] .theme-btn .moon { display: inline; }
+
+.theme-btn[aria-pressed="true"] {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateY(-1px);
+}
+
+/* small adjustments so the toggle sits well in headers */
+.theme-toggle { margin-left: 8px; }

@@ -1,4 +1,4 @@
-// Health & Work collapsible card behavior
+// Health & Work collapsible card behavior (moved from root and src/utils)
 // Health fragment may be injected dynamically. Observe DOM and attach handler when available.
 function attachHealthHandlers() {
   const card = document.getElementById('healthCard');
@@ -73,4 +73,3 @@ function attachHealthHandlers() {
 attachHealthHandlers();
 const observer = new MutationObserver(() => attachHealthHandlers());
 observer.observe(document.body, { childList: true, subtree: true });
-

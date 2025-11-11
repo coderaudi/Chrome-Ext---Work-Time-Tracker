@@ -1,6 +1,6 @@
 {
 	"manifest_version": 3,
-	"name": "Work Time Tracker (Local)",
+	"name": "Work Assistance",
 	"version": "0.0.2",
 	"description": "Reminds work time and 5 min before checkout notifications.",
 	"permissions": [
@@ -12,7 +12,7 @@
 		"service_worker": "background.js"
 	},
 	"action": {
-		"default_popup": "timetracker/index.html",
+		"default_popup": "workAssistanceApp.html",
 		"default_icon": {
 			"16": "icons/icon16.png",
 			"48": "icons/icon48.png",

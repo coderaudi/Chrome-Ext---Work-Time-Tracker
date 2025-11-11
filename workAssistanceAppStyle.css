@@ -1,4 +1,4 @@
-/* Minimal styles copied/adapted from root styles.css for popup UI */
+/* Minimal styles for Work Assistance popup UI (adapted from timetracker/index.css) */
 :root{--bg:#fff;--muted:#666}
 body{font-family:Segoe UI, sans-serif;background:var(--bg);color:#222;padding:12px;width:360px}
 .header-bar{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;margin-bottom:10px}
@@ -280,4 +280,3 @@ footer {
 		color: #bef2b6;
 			background: #ece07c;
 	}
-

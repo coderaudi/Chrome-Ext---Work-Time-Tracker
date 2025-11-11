@@ -1,4 +1,4 @@
-// Timetracker UI script (moved from popup.js)
+// Work Assistance UI script (moved from timetracker/index.js)
 const STORAGE_KEY_PREFIX = 'audi_in_';
 
 function pad(n) { return n.toString().padStart(2, '0'); }
@@ -65,24 +65,32 @@ function clearToday(cb) {
 }
 
 function updateHeaderProgress(headerBar, inDate) {
+  // Guard: if headerBar not provided, nothing to do
+  if (!headerBar) return;
+
+  // If inDate is missing or invalid, clear header styling
+  if (!inDate || !(inDate instanceof Date) || Number.isNaN(inDate.getTime())) {
+    headerBar.style.backgroundImage = '';
+    headerBar.style.backgroundSize = '';
+    headerBar.style.transition = '';
+    return;
+  }
+
   const now = new Date();
   const workSec = 7 * 3600; // 7 hours
   const elapsedSec = Math.floor((now - inDate) / 1000);
-  let progress = Math.min(Math.max(elapsedSec / workSec, 0), 1); // 0 → 1
-  const percent = Math.floor(progress * 100);
+  let progress = Math.min(Math.max(elapsedSec / workSec, 0), 1); // clamp 0 → 1
+  const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
 
-  let progressColor = '';
-  let remainingColor = '';
+  // Choose colors based on progress (first half = warning, second half = success)
+  const progressColor = progress <= 0.5 ? '#ece07c' : '#bef2b6';
+  const remainingColor = progress <= 0.5 ? '#eee' : '#f3cbcb';
 
-  if (progress <= 0.5) {
-    progressColor = '#ece07c';
-    remainingColor = '#eee';
-  } else {
-    progressColor = '#bef2b6';
-    remainingColor = '#f3cbcb';
-  }
-
-  if (headerBar) headerBar.style.background = `linear-gradient(to right, ${progressColor} 0%, ${progressColor} ${percent}%, ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
+  // Use backgroundImage for the gradient and set properties for smooth updates
+  headerBar.style.backgroundImage = `linear-gradient(to right, ${progressColor} 0%, ${progressColor} ${percent}%, ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
+  headerBar.style.backgroundRepeat = 'no-repeat';
+  headerBar.style.backgroundSize = '100% 100%';
+  headerBar.style.transition = 'background-image 0.4s linear, background-color 0.4s linear';
 }
 
 let savedData = null;
@@ -96,7 +104,13 @@ function tick(selectors) {
     if (elapsedEl) elapsedEl.textContent = '--';
     if (expectedCheckoutEl) expectedCheckoutEl.textContent = '--:--';
     if (remainingEl) remainingEl.textContent = 'Time Remaining: --';
-    if (headerBar) headerBar.style.backgroundSize = '0% 100%';
+    if (headerBar) {
+      // Clear any gradient/background applied by updateHeaderProgress
+      headerBar.style.backgroundImage = '';
+      headerBar.style.backgroundSize = '';
+      headerBar.style.backgroundRepeat = '';
+      headerBar.style.transition = '';
+    }
     return;
   }
 
@@ -180,4 +194,57 @@ function init() {
 }
 
 // Expose initializer so external loaders can call when components are present
-window.timetrackerInit = init;
+window.workAssistanceInit = init;
+// index.js (popup script)
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const testBtn = document.getElementById('testNotif');
+const test1hr = document.getElementById('test1hr');
+const test5min = document.getElementById('test5min');
+const status = document.getElementById('status');
+
+function setStatus(text) {
+	status.textContent = 'Status: ' + text;
+}
+
+startBtn.addEventListener('click', async () => {
+	// Save current time as IN in storage
+	const now = new Date();
+	const hh = now.getHours().toString().padStart(2, '0');
+	const mm = now.getMinutes().toString().padStart(2, '0');
+	const key = 'audi_in_' + now.toISOString().slice(0,10);
+	await chrome.storage.local.set({ [key]: { inTime: `${hh}:${mm}` } });
+	setStatus('shift started at ' + `${hh}:${mm}`);
+});
+
+stopBtn.addEventListener('click', async () => {
+	// Remove today's in time
+	const key = 'audi_in_' + new Date().toISOString().slice(0,10);
+	await chrome.storage.local.remove([key]);
+	setStatus('shift stopped');
+});
+
+function sendTest(type) {
+	chrome.runtime.sendMessage({ type }, (resp) => {
+		if (resp && resp.ok) {
+			setStatus(resp.message);
+		} else {
+			setStatus('no response');
+		}
+	});
+}
+
+testBtn.addEventListener('click', () => sendTest('TEST_NOTIFICATION'));
+test1hr.addEventListener('click', () => sendTest('TEST_1HR'));
+test5min.addEventListener('click', () => sendTest('TEST_5MIN'));
+
+// On load, show current stored IN time if any
+(async function init() {
+	const key = 'audi_in_' + new Date().toISOString().slice(0,10);
+	const res = await chrome.storage.local.get([key]);
+	if (res && res[key] && res[key].inTime) {
+		setStatus('shift started at ' + res[key].inTime);
+	} else {
+		setStatus('idle');
+	}
+})();
