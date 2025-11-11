@@ -13,103 +13,17 @@
 <body>
   <div class="container">
 
-    <!-- HEADER -->
-    <header class="header-bar">
-      <div class="header-left">
-        <h1>Welcome WTT!</h1>
-        <div class="small" id="todayLine"></div>
-      </div>
-      <div class="header-right">
-        <button id="testBtn" class="notify-btn" title="Send Test Notification">
-          <svg xmlns="http://www.w3.org/2000/svg" class="bell-icon" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-        </button>
-      </div>
-    </header>
-
-    <!-- MAIN CARD -->
-    <section class="clock-card">
-      <div class="card-top">
-        <div class="label">Today’s Progress</div>
-        <div id="remaining" class="remaining-top">--</div>
-      </div>
-
-      <div class="time-grid">
-        <div class="time-block">
-          <div class="title">Current Time</div>
-          <div id="clock" class="time-value">--:--:--</div>
-        </div>
-
-        <div class="time-block">
-          <div class="title">Checkout At</div>
-          <div id="expectedCheckout" class="time-value accent">--:--</div>
-        </div>
-      </div>
-    </section>
-
-  <!-- HEALTH & WORK BALANCE SECTION (inlined) -->
-  <section id="healthCard" class="health-card" aria-labelledby="healthHeading">
-    <div class="health-toggle" role="button" aria-expanded="false">
-      <div id="healthHeading"><strong>Health & Work Balance</strong></div>
-      <div class="chev">▶</div>
-    </div>
-    <div class="health-content">
-      <p>Keep your health and work balance: drink water every 1 hour, take short stretch breaks, and rest your eyes regularly.</p>
-    </div>
-  </section>
-
-    <!-- INPUT SECTION -->
-    <section class="in-time-section">
-      <label for="inTime">IN time</label>
-      <input id="inTime" type="time" step="60" />
-      <div class="controls">
-        <button id="saveBtn">Check IN</button>
-        <button id="clearBtn" class="ghost">Reset</button>
-      </div>
-      <div class="info">
-        <div>Elapsed since IN: <strong id="elapsed">--</strong></div>
-      </div>
-    </section>
+    <!-- Component placeholders: loaded from components/ to keep this file clean -->
+    <div id="comp-header"></div>
+    <div id="comp-clock"></div>
+    <div id="comp-health"></div>
+    <div id="comp-input"></div>
 
   <!-- FOOTER (loaded from footer/footer.html) -->
   <div id="footerPlaceholder"></div>
 
-  <script>
-    // Load the HTML fragment for health card and app footer with robust fallbacks
-    (async function(){
-      // Health section is inlined; attach behavior by loading health.js
-      try{
-        const healthScript = document.createElement('script');
-        healthScript.src = '../healthAndWork/health.js';
-        document.body.appendChild(healthScript);
-      }catch(e){console.warn('Failed to load health script', e)}
-
-      // Load app footer from dedicated folder
-      try{
-        const footerResp = await fetch('../footer/footer.html');
-        if (footerResp.ok){
-          const footerHtml = await footerResp.text();
-          const footerPlaceholder = document.getElementById('footerPlaceholder');
-          if (footerPlaceholder) footerPlaceholder.innerHTML = footerHtml;
-        } else {
-          console.warn('Footer fetch failed:', footerResp.status);
-        }
-
-        // Load footer CSS and script
-        const footerLink = document.createElement('link');
-        footerLink.rel = 'stylesheet';
-        footerLink.href = '../footer/footer.css';
-        document.head.appendChild(footerLink);
-        const scr = document.createElement('script');
-        scr.src = '../footer/footer.js';
-        document.body.appendChild(scr);
-      }catch(e){console.warn('Failed to load footer fragment or assets', e)}
-    })();
-  </script>
-  <script src="index.js"></script>
+  <!-- external loader (needed for extension popup CSP) -->
+  <script src="loader.js"></script>
   </div>
 </body>
 

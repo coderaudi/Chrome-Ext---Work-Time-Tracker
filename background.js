@@ -145,11 +145,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResp) => {
 		default:
 			console.warn('Unknown message type:', msg.type);
 			break;
-		case 'HEALTH_CLICK':
-			// Show a gentle health reminder
-			sendNotification('Health Reminder 💧', 'Take a short break: stretch or drink water.');
-			sendResp && sendResp({ ok: true });
-			break;
 	}
 
 	// Keep the message channel open if sendResp is used asynchronously

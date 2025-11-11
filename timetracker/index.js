@@ -1,15 +1,4 @@
 // Timetracker UI script (moved from popup.js)
-const clockEl = document.getElementById('clock');
-const todayLine = document.getElementById('todayLine');
-const inTimeInput = document.getElementById('inTime');
-const saveBtn = document.getElementById('saveBtn');
-const clearBtn = document.getElementById('clearBtn');
-const elapsedEl = document.getElementById('elapsed');
-const expectedCheckoutEl = document.getElementById('expectedCheckout');
-const remainingEl = document.getElementById('remaining');
-const headerBar = document.querySelector('.header-bar');
-const testBtn = document.getElementById("testBtn");
-
 const STORAGE_KEY_PREFIX = 'audi_in_';
 
 function pad(n) { return n.toString().padStart(2, '0'); }
@@ -48,22 +37,34 @@ function formatHHMM(d) {
 
 function loadSaved(callback) {
   const key = STORAGE_KEY_PREFIX + nowISODate();
-  chrome.storage.local.get([key], res => callback(res[key] || null));
+  if (chrome && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.get([key], res => callback(res[key] || null));
+  } else {
+    callback(null);
+  }
 }
 
 function saveToday(data, cb) {
   const key = STORAGE_KEY_PREFIX + nowISODate();
   const obj = {};
   obj[key] = data;
-  chrome.storage.local.set(obj, cb);
+  if (chrome && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.set(obj, cb);
+  } else {
+    cb && cb();
+  }
 }
 
 function clearToday(cb) {
   const key = STORAGE_KEY_PREFIX + nowISODate();
-  chrome.storage.local.remove([key], cb);
+  if (chrome && chrome.storage && chrome.storage.local) {
+    chrome.storage.local.remove([key], cb);
+  } else {
+    cb && cb();
+  }
 }
 
-function updateHeaderProgress(inDate) {
+function updateHeaderProgress(headerBar, inDate) {
   const now = new Date();
   const workSec = 7 * 3600; // 7 hours
   const elapsedSec = Math.floor((now - inDate) / 1000);
@@ -81,78 +82,102 @@ function updateHeaderProgress(inDate) {
     remainingColor = '#f3cbcb';
   }
 
-  headerBar.style.background = `linear-gradient(to right, 
-    ${progressColor} 0%, ${progressColor} ${percent}%, 
-    ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
+  if (headerBar) headerBar.style.background = `linear-gradient(to right, ${progressColor} 0%, ${progressColor} ${percent}%, ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
 }
 
 let savedData = null;
-function tick() {
+let tickInterval = null;
+function tick(selectors) {
+  const { clockEl, elapsedEl, expectedCheckoutEl, remainingEl, headerBar } = selectors;
   const now = new Date();
-  clockEl.textContent = formatTime(now);
+  if (clockEl) clockEl.textContent = formatTime(now);
 
   if (!savedData || !savedData.inTime) {
-    elapsedEl.textContent = '--';
-    expectedCheckoutEl.textContent = '--:--';
-    remainingEl.textContent = 'Time Remaining: --';
-    headerBar.style.backgroundSize = '0% 100%';
+    if (elapsedEl) elapsedEl.textContent = '--';
+    if (expectedCheckoutEl) expectedCheckoutEl.textContent = '--:--';
+    if (remainingEl) remainingEl.textContent = 'Time Remaining: --';
+    if (headerBar) headerBar.style.backgroundSize = '0% 100%';
     return;
   }
 
   const inDate = parseTimeStr(savedData.inTime);
   const elapsedSec = Math.floor((now - inDate) / 1000);
-  elapsedEl.textContent = secondsToHrMin(elapsedSec);
+  if (elapsedEl) elapsedEl.textContent = secondsToHrMin(elapsedSec);
 
   const checkout = new Date(inDate.getTime() + 7 * 3600 * 1000);
-  expectedCheckoutEl.textContent = formatHHMM(checkout);
+  if (expectedCheckoutEl) expectedCheckoutEl.textContent = formatHHMM(checkout);
 
   const remainingSec = Math.floor((checkout - now) / 1000);
-  if (remainingSec > 0) {
-    const hrs = Math.floor(remainingSec / 3600);
-    const mins = Math.floor((remainingSec % 3600) / 60);
-    const secs = remainingSec % 60;
-    remainingEl.textContent = `Remaining: ${hrs} hr ${mins} min ${secs}s`;
-  } else {
-    remainingEl.textContent = `✅ 7 hours completed!`;
+  if (remainingEl) {
+    if (remainingSec > 0) {
+      const hrs = Math.floor(remainingSec / 3600);
+      const mins = Math.floor((remainingSec % 3600) / 60);
+      const secs = remainingSec % 60;
+      remainingEl.textContent = `Remaining: ${hrs} hr ${mins} min ${secs}s`;
+    } else {
+      remainingEl.textContent = `✅ 7 hours completed!`;
+    }
   }
 
   if (savedData && savedData.inTime) {
-    const inDate = parseTimeStr(savedData.inTime);
-    updateHeaderProgress(inDate);
+    updateHeaderProgress(headerBar, inDate);
   }
 }
 
 function init() {
-  todayLine.textContent = formatDateLine(new Date());
+  // Query DOM elements (components should already be loaded by the caller)
+  const clockEl = document.getElementById('clock');
+  const todayLine = document.getElementById('todayLine');
+  const inTimeInput = document.getElementById('inTime');
+  const saveBtn = document.getElementById('saveBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const elapsedEl = document.getElementById('elapsed');
+  const expectedCheckoutEl = document.getElementById('expectedCheckout');
+  const remainingEl = document.getElementById('remaining');
+  const headerBar = document.querySelector('.header-bar');
+  const testBtn = document.getElementById('testBtn');
+
+  if (todayLine) todayLine.textContent = formatDateLine(new Date());
+
   loadSaved(saved => {
     savedData = saved;
-    if (saved && saved.inTime) inTimeInput.value = saved.inTime;
-    tick();
-    setInterval(tick, 1000);
+    if (saved && saved.inTime && inTimeInput) inTimeInput.value = saved.inTime;
+    tick({ clockEl, elapsedEl, expectedCheckoutEl, remainingEl, headerBar });
+    if (tickInterval) clearInterval(tickInterval);
+    tickInterval = setInterval(() => tick({ clockEl, elapsedEl, expectedCheckoutEl, remainingEl, headerBar }), 1000);
   });
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const val = document.getElementById('inTime')?.value;
+      if (!val) return alert('Please enter IN time.');
+      savedData = { inTime: val, savedAt: new Date().toISOString() };
+      saveToday(savedData, () => {
+        const btn = document.getElementById('saveBtn');
+        if (btn) btn.textContent = 'Saved ✓';
+        setTimeout(() => { if (btn) btn.textContent = 'Check IN' }, 900);
+      });
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (!confirm("Reset today's IN time?")) return;
+      clearToday(() => {
+        savedData = null;
+        const input = document.getElementById('inTime');
+        if (input) input.value = '';
+        tick({ clockEl, elapsedEl, expectedCheckoutEl, remainingEl, headerBar });
+      });
+    });
+  }
+
+  if (testBtn) {
+    testBtn.addEventListener('click', () => {
+      try { chrome.runtime.sendMessage({ type: "TEST_NOTIFICATION" }); } catch(e){ console.warn('chrome runtime not available', e) }
+    });
+  }
 }
 
-saveBtn.addEventListener('click', () => {
-  const val = inTimeInput.value;
-  if (!val) return alert('Please enter IN time.');
-  savedData = { inTime: val, savedAt: new Date().toISOString() };
-  saveToday(savedData, () => {
-    saveBtn.textContent = 'Saved ✓';
-    setTimeout(() => (saveBtn.textContent = 'Check IN'), 900);
-  });
-});
-
-clearBtn.addEventListener('click', () => {
-  if (!confirm("Reset today's IN time?")) return;
-  clearToday(() => {
-    savedData = null;
-    inTimeInput.value = '';
-    tick();
-  });
-});
-
-testBtn.addEventListener('click', () => {
-  chrome.runtime.sendMessage({ type: "TEST_NOTIFICATION" });
-});
-
-init();
+// Expose initializer so external loaders can call when components are present
+window.timetrackerInit = init;
