@@ -142,6 +142,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResp) => {
 			sendResp({ ok: true, message: 'Shift complete test sent.' });
 			break;
 
+		case 'HEALTH_REMINDER':
+			sendNotification(
+				'Take care of your health',
+				'Take care of your health while working !!!'
+			);
+			sendResp({ ok: true, message: 'Health reminder notification sent.' });
+			break;
+
 		default:
 			console.warn('Unknown message type:', msg.type);
 			break;
