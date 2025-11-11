@@ -1,6 +1,6 @@
 // src/screens/healthAndWork/health.js
 
-// Health & Work Balance collapsible behavior + reminder button
+// Collapsible behavior for Health & Work card
 function attachHealthHandlers() {
   const card = document.getElementById('healthCard');
   if (!card) return;
@@ -10,60 +10,103 @@ function attachHealthHandlers() {
     toggle.dataset.attached = '1';
     toggle.addEventListener('click', () => {
       card.classList.toggle('health-open');
-      const open = card.classList.contains('health-open');
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  }
-
-  const btn = card.querySelector('#healthNotifyBtn');
-  if (btn && !btn.dataset.handlerAttached) {
-    btn.dataset.handlerAttached = '1';
-    btn.addEventListener('click', () => {
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Sending...';
-
-      const showFallbackAlert = () => {
-        alert('💡 Take care of your health while working!');
-        btn.disabled = false;
-        btn.textContent = originalText;
-      };
-
-      const tryLocalNotification = () => {
-        if (chrome?.notifications?.create) {
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icons/icon128.png',
-            title: 'Health Reminder',
-            message: 'Take care of your health while working! 🌿',
-            priority: 2
-          }, () => {
-            btn.disabled = false;
-            btn.textContent = originalText;
-          });
-          return true;
-        }
-        return false;
-      };
-
-      if (chrome?.runtime?.sendMessage) {
-        chrome.runtime.sendMessage({ type: 'HEALTH_REMINDER' }, (resp) => {
-          if (chrome.runtime.lastError) {
-            console.warn('sendMessage failed:', chrome.runtime.lastError);
-            if (!tryLocalNotification()) showFallbackAlert();
-          } else {
-            btn.disabled = false;
-            btn.textContent = originalText;
-          }
-        });
-      } else {
-        if (!tryLocalNotification()) showFallbackAlert();
-      }
+      toggle.setAttribute('aria-expanded', card.classList.contains('health-open'));
     });
   }
 }
-
-// Try to attach immediately, and reattach if DOM changes (for dynamic injection)
 attachHealthHandlers();
-const observer = new MutationObserver(() => attachHealthHandlers());
-observer.observe(document.body, { childList: true, subtree: true });
+new MutationObserver(() => attachHealthHandlers()).observe(document.body, { childList: true, subtree: true });
+
+// ===== Reminder intervals =====
+const reminderIntervals = {};
+
+// Reminder config for each type
+const REMINDERS = {
+  water: {
+    title: '💧 Water Reminder',
+    message: 'Time for a sip! Take a few sips of water 💦',
+    // interval: 60 * 60 * 1000 // 1 hour
+    interval: 10 * 1000  // 10 seconds for testing
+
+  },
+  eye: {
+    title: '👀 Eye Break',
+    message: 'Look away from the screen for 20 seconds (20-20-20 rule).',
+    // interval: 20 * 60 * 1000 // 20 minutes
+    interval: 10 * 1000  // 10 seconds for testing
+
+  },
+  stretch: {
+    title: '🏃 Walk / Stretch Break',
+    message: 'Stand up and stretch or walk for 2–3 minutes 🧘‍♂️',
+    interval: 78 * 60 * 1000 // ~1.3 hours
+  }
+};
+
+// Show desktop notification
+function showNotification(title, message) {
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body: message, icon: 'icons/icon128.png' });
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') new Notification(title, { body: message, icon: 'icons/icon128.png' });
+      else alert(`${title}\n\n${message}`); // fallback
+    });
+  } else {
+    alert(`${title}\n\n${message}`); // fallback
+  }
+}
+
+// Toggle a reminder
+function toggleReminder(type, btn) {
+  if (reminderIntervals[type]) {
+    clearInterval(reminderIntervals[type]);
+    delete reminderIntervals[type];
+    btn.classList.remove('active');
+    btn.textContent = 'Start';
+  } else {
+    const { title, message, interval } = REMINDERS[type];
+
+    // Show first notification immediately
+    showNotification(title, message);
+
+    // Start interval
+    reminderIntervals[type] = setInterval(() => showNotification(title, message), interval);
+
+    btn.classList.add('active');
+    btn.textContent = 'Stop';
+  }
+}
+
+
+// Attach buttons
+document.querySelectorAll('.reminder-btn').forEach(btn => {
+  const type = btn.dataset.type;
+  btn.addEventListener('click', () => {
+    // Send message to background to start reminder
+    chrome.runtime.sendMessage({ type: 'START_HEALTH_REMINDER', reminderType: type });
+
+    // Update UI button
+    btn.classList.add('active');
+    btn.textContent = 'Reminder Set';
+  });
+});
+
+
+const stopBtn = document.getElementById('stopAllBtn');
+
+if (stopBtn) {
+  stopBtn.addEventListener('click', stopAllReminders);
+}
+
+function stopAllReminders() {
+  chrome.runtime.sendMessage({ type: 'STOP_ALL_HEALTH_REMINDERS' }, (resp) => {
+    console.log(resp.message);
+
+    // Reset all buttons UI
+    document.querySelectorAll('.reminder-btn').forEach(btn => {
+      btn.classList.remove('active');
+      btn.textContent = 'Start';
+    });
+  });
+}

@@ -68,3 +68,62 @@
 	background: var(--accent-light);
 	transform: translateY(-1px);
 }
+/* Grid for 3 boxes */
+.health-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+	margin-top: 10px;
+}
+
+/* Individual box styling */
+.health-box {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px 8px;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	text-align: center;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.health-box:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.health-box .icon {
+	font-size: 22px;
+	margin-bottom: 6px;
+}
+
+.health-box .title {
+	font-size: 13px;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+/* Reminder button */
+.reminder-btn {
+	background: #007bff;
+	color: white;
+	border: none;
+	padding: 6px 8px;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	width: 100%;
+	transition: background 0.2s;
+}
+
+.reminder-btn:hover {
+	background: #0056b3;
+}
+
+.reminder-btn.active {
+	background: #28a745;
+}

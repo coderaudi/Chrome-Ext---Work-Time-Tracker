@@ -1,31 +1,38 @@
 // background.js
-// Sends notifications at ~1 hour, ~5 minutes before checkout and when 7 hours complete.
-// Stores per-day flags so each reminder is sent only once per day.
-// Also supports manual test messages: TEST_NOTIFICATION, TEST_1HR, TEST_5MIN, TEST_COMPLETE
+// Chrome Extension Background Script
+// Handles:
+// 1️⃣ Audi Work Tracker Reminders (1-hour, 5-min, shift completed)
+// 2️⃣ Persistent Health Reminders (Water, Eye Break, Stretch/Walk)
+// 3️⃣ Manual test notifications
+// 4️⃣ Notification clicks & optional snooze
 
+// ------------------------------
+// Section 0: Constants & State
+// ------------------------------
 const IN_KEY_PREFIX = 'audi_in_';
 const NOTIFIED_PREFIX = 'audi_notified_';
 
-// create/check alarm on install/startup
-chrome.runtime.onInstalled.addListener(() => {
-	console.log('Audi Time Tracker background installed');
-	chrome.alarms.create('checkExitTime', { periodInMinutes: 1 });
-});
-chrome.runtime.onStartup.addListener(() => {
-	console.log('Audi Time Tracker background started');
-	chrome.alarms.create('checkExitTime', { periodInMinutes: 1 });
-});
+// Health reminders configuration
+const HEALTH_REMINDERS = {
+	water: { title: '💧 Water Reminder', message: 'Time for a sip! Take a few sips of water 💦', intervalSec: 10 },  // 10 sec for testing
+	eye: { title: '👀 Eye Break', message: 'Look away from the screen for 20 seconds.', intervalSec: 10 },
+	stretch: { title: '🏃 Walk / Stretch Break', message: 'Stand up and stretch for 2–3 minutes 🧘‍♂️', intervalSec: 10 }
+};
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-	if (alarm.name === 'checkExitTime') checkForReminder();
-});
+// Track active health reminders to avoid duplicates
+const activeHealthReminders = {};
+// Track if all health reminders are globally stopped
+let healthRemindersStopped = false;
+// ------------------------------
+// Section 1: Utility Functions
+// ------------------------------
 
-// Utility: todays ISO date (YYYY-MM-DD)
+// Get today's ISO date (YYYY-MM-DD)
 function todayISO(d = new Date()) {
 	return d.toISOString().slice(0, 10);
 }
 
-// send a chrome notification
+// Send a Chrome notification
 function sendNotification(title, message) {
 	chrome.notifications.create({
 		type: 'basic',
@@ -38,6 +45,21 @@ function sendNotification(title, message) {
 	});
 }
 
+// ------------------------------
+// Section 2: Audi Work Tracker Reminders
+// ------------------------------
+
+// Create/check alarm on install/startup
+chrome.runtime.onInstalled.addListener(() => {
+	console.log('Audi Time Tracker background installed');
+	chrome.alarms.create('checkExitTime', { periodInMinutes: 1 });
+});
+chrome.runtime.onStartup.addListener(() => {
+	console.log('Audi Time Tracker background started');
+	chrome.alarms.create('checkExitTime', { periodInMinutes: 1 });
+});
+
+// Check exit time and send work reminders
 function checkForReminder() {
 	const today = todayISO();
 	const inKey = IN_KEY_PREFIX + today;
@@ -64,7 +86,7 @@ function checkForReminder() {
 		const now = new Date();
 		const diffMin = (checkout - now) / 60000; // minutes until checkout
 
-		// 1-hour reminder (approx)
+		// 1-hour reminder
 		if (!flags.oneHourSent && diffMin <= 60.5 && diffMin > 59.0) {
 			sendNotification(
 				'Checkout in 1 hour ⏳',
@@ -73,7 +95,7 @@ function checkForReminder() {
 			flags.oneHourSent = true;
 		}
 
-		// 5-minute reminder (approx)
+		// 5-minute reminder
 		if (!flags.fiveMinSent && diffMin <= 5.5 && diffMin > 4.0) {
 			sendNotification(
 				'Checkout in 5 minutes ⏰',
@@ -82,9 +104,7 @@ function checkForReminder() {
 			flags.fiveMinSent = true;
 		}
 
-		// COMPLETION notice: when checkout time has arrived / just passed
-		// Use a tolerance window so the alarm minute granularity won't miss it.
-		// Fire once when diffMin <= 0.5 and diffMin > -30 (within 30 minutes after checkout)
+		// Completion notice
 		if (!flags.completedSent && diffMin <= 0.5 && diffMin > -30) {
 			sendNotification(
 				'Shift Completed ✅',
@@ -95,7 +115,6 @@ function checkForReminder() {
 
 		// persist updated flags
 		chrome.storage.local.set({ [notifyKey]: flags }, () => {
-			// optional cleanup: if it's long past checkout (e.g., > 2 hours), clear flags for next day
 			const minutesPast = (now - checkout) / 60000;
 			if (minutesPast > 120) {
 				chrome.storage.local.remove([notifyKey], () => { });
@@ -104,79 +123,141 @@ function checkForReminder() {
 	});
 }
 
-// Listen for manual test messages from popup or UI actions
+// ------------------------------
+// Section 3: Handle Incoming Messages (Popup / UI triggers)
+// ------------------------------
 chrome.runtime.onMessage.addListener((msg, sender, sendResp) => {
 	if (!msg || !msg.type) return;
 
 	switch (msg.type) {
-		case 'TEST_NOTIFICATION':
-			sendNotification(
-				'Work Time Tracker! 🔔',
-				'⏰ You’ll receive 2 reminders before checkout — 1️⃣ hour before and another 5️⃣ minutes before your shift ends.'
-			);
 
-			sendResp({ ok: true, message: 'Test notification sent successfully.' });
+		// --------------------------
+		// Manual test notifications
+		// --------------------------
+		case 'TEST_NOTIFICATION':
+			sendNotification('Work Time Tracker! 🔔', '⏰ You’ll receive 2 reminders before checkout — 1️⃣ hour before and another 5️⃣ minutes before your shift ends.');
+			sendResp({ ok: true });
 			break;
 
 		case 'TEST_1HR':
-			sendNotification(
-				'Reminder ⏳',
-				'You have 1 hour remaining before your checkout time. Please wrap up your ongoing tasks.'
-			);
-			sendResp({ ok: true, message: '1-hour reminder test sent.' });
+			sendNotification('Reminder ⏳', 'You have 1 hour remaining before your checkout time. Please wrap up your ongoing tasks.');
+			sendResp({ ok: true });
 			break;
 
 		case 'TEST_5MIN':
-			sendNotification(
-				'Final Reminder ⏰',
-				'Only 5 minutes left until checkout. Save your work and prepare to log out.'
-			);
-			sendResp({ ok: true, message: '5-minute reminder test sent.' });
+			sendNotification('Final Reminder ⏰', 'Only 5 minutes left until checkout. Save your work and prepare to log out.');
+			sendResp({ ok: true });
 			break;
 
 		case 'TEST_COMPLETE':
-			sendNotification(
-				'Shift Completed ✅',
-				'Good job today! Your shift time is completed. Don’t forget to log your work summary if required.'
-			);
-			sendResp({ ok: true, message: 'Shift complete test sent.' });
+			sendNotification('Shift Completed ✅', 'Good job today! Your shift time is completed.');
+			sendResp({ ok: true });
 			break;
 
+		// --------------------------
+		// Health Reminder (manual single notification)
+		// --------------------------
 		case 'HEALTH_REMINDER':
-			sendNotification(
-				'Take care of your health',
-				'Take care of your health while working !!!'
-			);
-			sendResp({ ok: true, message: 'Health reminder notification sent.' });
+			sendNotification('Take care of your health', 'Take care of your health while working !!!');
+			sendResp({ ok: true });
 			break;
+
+		// --------------------------
+		// START a persistent health reminder
+		// --------------------------
+		case 'START_HEALTH_REMINDER': {
+			const type = msg.reminderType;
+			healthRemindersStopped = false; // reset global stop
+
+			if (!HEALTH_REMINDERS[type]) break;
+
+			// Only start if globally not stopped
+			if (!activeHealthReminders[type] && !healthRemindersStopped) {
+				chrome.alarms.create('health_' + type, { periodInMinutes: HEALTH_REMINDERS[type].intervalSec / 60 });
+				activeHealthReminders[type] = true;
+
+				// Initial notification immediately
+				sendNotification(HEALTH_REMINDERS[type].title, HEALTH_REMINDERS[type].message);
+			}
+			sendResp({ ok: true, message: `${type} reminder started` });
+			break;
+		}
+
+		// --------------------------
+		// STOP all persistent health reminders
+		// --------------------------
+		case 'STOP_ALL_HEALTH_REMINDERS': {
+			// 1️⃣ Clear all alarms
+			Object.keys(activeHealthReminders).forEach(type => {
+				chrome.alarms.clear('health_' + type, cleared => {
+					if (cleared) console.log(`${type} reminder stopped`);
+				});
+			});
+
+			// 2️⃣ Clear tracker
+			for (const key in activeHealthReminders) delete activeHealthReminders[key];
+
+			// 3️⃣ Set global stop flag
+			healthRemindersStopped = true;
+
+			// 4️⃣ Respond to popup
+			sendResp({ ok: true, message: 'All health reminders stopped' });
+			break;
+		}
 
 		default:
 			console.warn('Unknown message type:', msg.type);
 			break;
 	}
 
-	// Keep the message channel open if sendResp is used asynchronously
-	return true;
+	return true; // keep message channel open
 });
 
-// When user clicks a notification body, show a custom follow-up message.
+// ------------------------------
+// Section 4: Handle Chrome Alarms
+// ------------------------------
+chrome.alarms.onAlarm.addListener((alarm) => {
+	// Health reminders
+	if (alarm.name.startsWith('health_')) {
+		if (healthRemindersStopped) return; // HARD STOP: do nothing
+
+		const type = alarm.name.replace('health_', '');
+		const reminder = HEALTH_REMINDERS[type];
+		if (reminder) sendNotification(reminder.title, reminder.message);
+	}
+
+	// Work tracker alarms
+	if (alarm.name === 'checkExitTime') checkForReminder();
+
+	// Snooze alarms (optional)
+	if (alarm.name && alarm.name.startsWith('snooze_')) {
+		chrome.notifications.create({
+			type: 'basic',
+			iconUrl: 'icons/icon128.png',
+			title: 'Snoozed Reminder ⏰',
+			message: 'This is your snoozed reminder — time to wrap up.',
+			priority: 2
+		});
+	}
+});
+
+// ------------------------------
+// Section 5: Notification Clicks & Buttons
+// ------------------------------
 chrome.notifications.onClicked.addListener((notificationId) => {
 	console.log('Notification clicked:', notificationId);
-	// Custom follow-up notification
 	chrome.notifications.create({
 		type: 'basic',
 		iconUrl: 'icons/icon128.png',
 		title: 'Thanks for checking!',
 		message: 'You clicked the reminder — don\'t forget to finish up and logout on time.',
 		priority: 2
-	}, id => console.log('Follow-up notification created:', id));
+	});
 });
 
-// Optional: handle notification buttons (if any are added later)
 chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
 	console.log('Notification button clicked:', notificationId, buttonIndex);
 	if (buttonIndex === 0) {
-		// Example: snooze — notify user it's snoozed
 		chrome.notifications.create({
 			type: 'basic',
 			iconUrl: 'icons/icon128.png',
@@ -184,7 +265,6 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 			message: 'Reminder snoozed for 5 minutes.',
 			priority: 2
 		});
-		// Create a short alarm to re-notify after 5 minutes
 		chrome.alarms.create(`snooze_${Date.now()}`, { delayInMinutes: 5 });
 	} else {
 		chrome.notifications.create({
@@ -192,19 +272,6 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
 			iconUrl: 'icons/icon128.png',
 			title: 'Dismissed',
 			message: 'Reminder dismissed.',
-			priority: 2
-		});
-	}
-});
-
-// Handle snooze alarms (re-create a reminder notification)
-chrome.alarms.onAlarm.addListener((alarm) => {
-	if (alarm.name && alarm.name.startsWith('snooze_')) {
-		chrome.notifications.create({
-			type: 'basic',
-			iconUrl: 'icons/icon128.png',
-			title: 'Snoozed Reminder ⏰',
-			message: 'This is your snoozed reminder — time to wrap up.',
 			priority: 2
 		});
 	}
