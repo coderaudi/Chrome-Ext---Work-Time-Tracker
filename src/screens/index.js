@@ -76,6 +76,7 @@ function updateHeaderProgress(headerBar, inDate) {
     return;
   }
 
+
   const now = new Date();
   const workSec = 7 * 3600; // 7 hours
   const elapsedSec = Math.floor((now - inDate) / 1000);
@@ -202,6 +203,9 @@ const testBtn = document.getElementById('testNotif');
 const test1hr = document.getElementById('test1hr');
 const test5min = document.getElementById('test5min');
 const status = document.getElementById('status');
+const todayLine = document.getElementById('todayLine');
+const elapsedEl = document.getElementById('elapsed');
+
 
 function setStatus(text) {
 	status.textContent = 'Status: ' + text;
