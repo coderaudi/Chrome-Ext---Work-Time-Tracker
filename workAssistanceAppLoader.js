@@ -122,6 +122,14 @@
     await loadFragment('screen-header', 'src/screens/header/header.html',
       '<header class="header-bar"><div class="header-left"><h1>Work Assistance</h1><div class="small" id="todayLine"></div></div></header>'
     );
+
+    await componentLoader.loadInto(
+      document.getElementById('screen-header'),           // placeholder
+      'src/screens/header/header.html',                   // HTML
+      'src/screens/header/header.css',                    // CSS
+      'src/screens/header/header.js'                      // JS (personalization script)
+    );
+
     await componentLoader.loadInto(
       document.getElementById('screen-clock'), // placeholder
       'src/screens/progressClock/clock.html',  // HTML

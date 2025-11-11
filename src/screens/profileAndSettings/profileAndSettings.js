@@ -9,7 +9,22 @@ async function hashPassword(password) {
 	return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Save profile settings
+// Function to update header H1 based on saved name
+function updateHeaderName() {
+	const headerH1 = document.querySelector('.header-bar h1');
+	if (!headerH1) return;
+
+	const profile = JSON.parse(localStorage.getItem('workAssistProfile') || '{}');
+	const username = profile.name?.trim();
+
+	if (username) {
+		headerH1.innerHTML = `<strong>${username}'s</strong> Work Assistant`;
+	} else {
+		headerH1.innerHTML = `<strong>Your</strong> Work Assistant`;
+	}
+}
+
+// Save profile settings to Chrome storage
 async function saveProfile() {
 	const name = document.getElementById('userName').value.trim();
 	const password = document.getElementById('userPassword').value.trim();
@@ -33,7 +48,7 @@ async function saveProfile() {
 	});
 }
 
-// Load saved profile
+// Load saved profile from Chrome storage
 function loadProfile() {
 	chrome.storage.local.get('user', ({ user }) => {
 		if (!user) return;
@@ -44,8 +59,12 @@ function loadProfile() {
 			});
 		}
 	});
+
+	// Also update header on load
+	updateHeaderName();
 }
 
+// Attach event handlers and collapsible behavior
 function attachProfileHandlers() {
 	const card = document.getElementById('profileCard');
 	if (!card) return;
@@ -77,7 +96,11 @@ function attachProfileHandlers() {
 			const password = passwordInput.value.trim();
 			const defaultReminder = reminderSelect.value;
 
+			// Save locally
 			localStorage.setItem('workAssistProfile', JSON.stringify({ name, password, defaultReminder }));
+
+			// Update header dynamically
+			updateHeaderName();
 
 			// Show small green message
 			let msg = card.querySelector('.save-msg');
@@ -97,12 +120,12 @@ function attachProfileHandlers() {
 	}
 }
 
+// Initial attachment
 attachProfileHandlers();
 new MutationObserver(() => attachProfileHandlers()).observe(document.body, { childList: true, subtree: true });
 
-
-// Event listener
+// Event listener for Chrome storage save
 document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
 
-// Initialize
+// Load profile on DOM content loaded
 document.addEventListener('DOMContentLoaded', loadProfile);
