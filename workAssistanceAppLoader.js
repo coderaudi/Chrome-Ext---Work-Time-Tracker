@@ -21,12 +21,14 @@
     // load core fragments from src/components and src/screens
     await loadFragment('comp-header', 'src/components/header.html', '<header class="header-bar"><div class="header-left"><h1>Work Assistance</h1><div class="small" id="todayLine"></div></div></header>');
     await loadFragment('comp-clock', 'src/components/clock.html');
-    await loadFragment('comp-health', 'src/components/health.html');
+  // health component moved to src/screens/healthAndWork/
+  await loadFragment('comp-health', 'src/screens/healthAndWork/health.html');
     await loadFragment('comp-input', 'src/components/input.html');
 
     // load health behavior if available
     try{
-      const healthScriptSrc = resolve('src/utils/health.js');
+  // health behaviour script moved alongside the screen
+  const healthScriptSrc = resolve('src/screens/healthAndWork/health.js');
       if (!document.querySelector(`script[src="${healthScriptSrc}"]`)){
         const healthScript = document.createElement('script');
         healthScript.src = healthScriptSrc;
