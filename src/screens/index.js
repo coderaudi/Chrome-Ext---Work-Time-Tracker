@@ -65,24 +65,32 @@ function clearToday(cb) {
 }
 
 function updateHeaderProgress(headerBar, inDate) {
+  // Guard: if headerBar not provided, nothing to do
+  if (!headerBar) return;
+
+  // If inDate is missing or invalid, clear header styling
+  if (!inDate || !(inDate instanceof Date) || Number.isNaN(inDate.getTime())) {
+    headerBar.style.backgroundImage = '';
+    headerBar.style.backgroundSize = '';
+    headerBar.style.transition = '';
+    return;
+  }
+
   const now = new Date();
   const workSec = 7 * 3600; // 7 hours
   const elapsedSec = Math.floor((now - inDate) / 1000);
-  let progress = Math.min(Math.max(elapsedSec / workSec, 0), 1); // 0 → 1
-  const percent = Math.floor(progress * 100);
+  let progress = Math.min(Math.max(elapsedSec / workSec, 0), 1); // clamp 0 → 1
+  const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
 
-  let progressColor = '';
-  let remainingColor = '';
+  // Choose colors based on progress (first half = warning, second half = success)
+  const progressColor = progress <= 0.5 ? '#ece07c' : '#bef2b6';
+  const remainingColor = progress <= 0.5 ? '#eee' : '#f3cbcb';
 
-  if (progress <= 0.5) {
-    progressColor = '#ece07c';
-    remainingColor = '#eee';
-  } else {
-    progressColor = '#bef2b6';
-    remainingColor = '#f3cbcb';
-  }
-
-  if (headerBar) headerBar.style.background = `linear-gradient(to right, ${progressColor} 0%, ${progressColor} ${percent}%, ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
+  // Use backgroundImage for the gradient and set properties for smooth updates
+  headerBar.style.backgroundImage = `linear-gradient(to right, ${progressColor} 0%, ${progressColor} ${percent}%, ${remainingColor} ${percent}%, ${remainingColor} 100%)`;
+  headerBar.style.backgroundRepeat = 'no-repeat';
+  headerBar.style.backgroundSize = '100% 100%';
+  headerBar.style.transition = 'background-image 0.4s linear, background-color 0.4s linear';
 }
 
 let savedData = null;
@@ -96,7 +104,13 @@ function tick(selectors) {
     if (elapsedEl) elapsedEl.textContent = '--';
     if (expectedCheckoutEl) expectedCheckoutEl.textContent = '--:--';
     if (remainingEl) remainingEl.textContent = 'Time Remaining: --';
-    if (headerBar) headerBar.style.backgroundSize = '0% 100%';
+    if (headerBar) {
+      // Clear any gradient/background applied by updateHeaderProgress
+      headerBar.style.backgroundImage = '';
+      headerBar.style.backgroundSize = '';
+      headerBar.style.backgroundRepeat = '';
+      headerBar.style.transition = '';
+    }
     return;
   }
 
