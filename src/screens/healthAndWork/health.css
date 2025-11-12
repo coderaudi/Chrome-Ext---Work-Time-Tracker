@@ -163,8 +163,23 @@
 	margin-bottom: 8px;
 }
 
+
 /* Optional: visual highlight for active reminder */
 .health-box.active {
-	border: 2px solid var(--accent);
+	border: 1px solid var(--accent);
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+		/* soft gradient */
+		transform: scale(1.05);
+		/* subtle pop effect */
+		transition: all 0.3s ease;
+	}
+	
+	.health-box .active-indicator {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		font-size: 14px;
+		color: var(--accent);
+		display: none;
 }
