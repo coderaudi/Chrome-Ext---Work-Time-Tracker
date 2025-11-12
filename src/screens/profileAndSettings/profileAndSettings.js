@@ -27,14 +27,14 @@ function updateHeaderName() {
 // Save profile settings to Chrome storage and localStorage
 async function saveProfile() {
 	const name = document.getElementById('profileName').value.trim();
-	const password = document.getElementById('profilePassword').value.trim();
-	const reminderSelect = document.getElementById('profileDefaultReminder');
+	// const password = document.getElementById('profilePassword').value.trim();
+	// const reminderSelect = document.getElementById('profileDefaultReminder');
 
 	// Save locally
 	const profileData = {
 		name,
-		password,
-		defaultReminder: reminderSelect.value
+		// password,
+		// defaultReminder: reminderSelect.value
 	};
 	localStorage.setItem('workAssistProfile', JSON.stringify(profileData));
 
@@ -45,8 +45,8 @@ async function saveProfile() {
 	const dataToStore = {
 		user: {
 			name,
-			passwordHash: password ? await hashPassword(password) : undefined,
-			reminders: [] // can add reminder checkboxes if needed
+			// passwordHash: password ? await hashPassword(password) : undefined,
+			// reminders: [] // can add reminder checkboxes if needed
 		}
 	};
 	chrome.storage.local.set(dataToStore, () => {
@@ -99,8 +99,8 @@ function attachProfileHandlers() {
 document.addEventListener('DOMContentLoaded', () => {
 	const savedProfile = JSON.parse(localStorage.getItem('workAssistProfile') || '{}');
 	if (savedProfile.name) document.getElementById('profileName').value = savedProfile.name;
-	if (savedProfile.password) document.getElementById('profilePassword').value = savedProfile.password;
-	if (savedProfile.defaultReminder) document.getElementById('profileDefaultReminder').value = savedProfile.defaultReminder;
+	// if (savedProfile.password) document.getElementById('profilePassword').value = savedProfile.password;
+	// if (savedProfile.defaultReminder) document.getElementById('profileDefaultReminder').value = savedProfile.defaultReminder;
 
 	// Update header
 	updateHeaderName();
