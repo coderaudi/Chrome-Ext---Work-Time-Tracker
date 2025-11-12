@@ -49,8 +49,8 @@ function updateHeaderProgress(inDate) {
 
 	if (progress < 0.5) {
 		// Less than 50% done → yellow + gray
-		progressColor = '#fdffbb';
-		remainingColor = '#eee';
+		progressColor = '#f7f494';
+		remainingColor = '#f8f9fa';
 	} else {
 		// 50% or more done → green + red
 		progressColor = '#c1ffc5';
