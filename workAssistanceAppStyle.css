@@ -97,7 +97,7 @@ body {
 
 .container {
 	width: 340px;
-	padding: 18px;
+	padding: 10px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
