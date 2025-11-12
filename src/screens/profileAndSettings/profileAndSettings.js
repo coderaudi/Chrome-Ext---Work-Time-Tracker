@@ -27,14 +27,14 @@ function updateHeaderName() {
 // Save profile settings to Chrome storage and localStorage
 async function saveProfile() {
 	const name = document.getElementById('profileName').value.trim();
-	// const password = document.getElementById('profilePassword').value.trim();
-	// const reminderSelect = document.getElementById('profileDefaultReminder');
+	const password = document.getElementById('profilePassword')?.value.trim();
+	const reminderSelect = document.getElementById('profileDefaultReminder');
 
 	// Save locally
 	const profileData = {
 		name,
-		// password,
-		// defaultReminder: reminderSelect.value
+		password,
+		defaultReminder: reminderSelect?.value
 	};
 	localStorage.setItem('workAssistProfile', JSON.stringify(profileData));
 
@@ -45,8 +45,8 @@ async function saveProfile() {
 	const dataToStore = {
 		user: {
 			name,
-			// passwordHash: password ? await hashPassword(password) : undefined,
-			// reminders: [] // can add reminder checkboxes if needed
+			passwordHash: password ? await hashPassword(password) : undefined,
+			reminders: [] // can add reminder checkboxes if needed
 		}
 	};
 	chrome.storage.local.set(dataToStore, () => {
@@ -72,7 +72,7 @@ async function saveProfile() {
 	setTimeout(() => { msg.textContent = ''; }, 3000);
 }
 
-// Attach toggle and save button handlers
+// Attach toggle and save button handlers & prepopulate inputs
 function attachProfileHandlers() {
 	const card = document.getElementById('profileCard');
 	if (!card) return;
@@ -93,21 +93,34 @@ function attachProfileHandlers() {
 		saveBtn.dataset.attached = '1';
 		saveBtn.addEventListener('click', saveProfile);
 	}
+
+	// Prepopulate inputs
+	const savedProfile = JSON.parse(localStorage.getItem('workAssistProfile') || '{}');
+
+	const nameInput = document.getElementById('profileName');
+	if (nameInput && !nameInput.dataset.prepopulated && savedProfile.name) {
+		nameInput.value = savedProfile.name;
+		nameInput.dataset.prepopulated = '1';
+	}
+
+	const passwordInput = document.getElementById('profilePassword');
+	if (passwordInput && !passwordInput.dataset.prepopulated && savedProfile.password) {
+		passwordInput.value = savedProfile.password;
+		passwordInput.dataset.prepopulated = '1';
+	}
+
+	const reminderSelect = document.getElementById('profileDefaultReminder');
+	if (reminderSelect && !reminderSelect.dataset.prepopulated && savedProfile.defaultReminder) {
+		reminderSelect.value = savedProfile.defaultReminder;
+		reminderSelect.dataset.prepopulated = '1';
+	}
 }
 
-// Load saved profile **once on page load**
+// Initial load
 document.addEventListener('DOMContentLoaded', () => {
-	const savedProfile = JSON.parse(localStorage.getItem('workAssistProfile') || '{}');
-	if (savedProfile.name) document.getElementById('profileName').value = savedProfile.name;
-	// if (savedProfile.password) document.getElementById('profilePassword').value = savedProfile.password;
-	// if (savedProfile.defaultReminder) document.getElementById('profileDefaultReminder').value = savedProfile.defaultReminder;
-
-	// Update header
-	updateHeaderName();
-
-	// Attach toggle and save button handlers
 	attachProfileHandlers();
+	updateHeaderName();
 });
 
-// Observe DOM changes in case the profile card is dynamically loaded
+// Observe DOM changes for dynamically added profile card
 new MutationObserver(() => attachProfileHandlers()).observe(document.body, { childList: true, subtree: true });
