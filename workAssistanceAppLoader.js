@@ -137,6 +137,14 @@
       'src/screens/progressClock/clock.js'     // JS
     );
 
+
+    await componentLoader.loadInto(
+      document.getElementById('screen-workCheckIn'),
+      'src/screens/workCheckIn/checkIn.html',
+      'src/screens/workCheckIn/checkIn.css', // new CSS file
+      'src/screens/workCheckIn/checkIn.js'
+    );
+
     await componentLoader.loadInto(
       document.getElementById('screen-typemaster'),
       'src/screens/gamezone/typemaster/typemaster.html',
