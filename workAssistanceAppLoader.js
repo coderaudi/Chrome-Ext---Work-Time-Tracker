@@ -138,6 +138,14 @@
     );
 
     await componentLoader.loadInto(
+      document.getElementById('screen-typemaster'),
+      'src/screens/gamezone/typemaster/typemaster.html',
+      'src/screens/gamezone/typemaster/typemaster.css',
+      'src/screens/gamezone/typemaster/typemaster.js'
+    );
+
+
+    await componentLoader.loadInto(
       document.getElementById('screen-profileAndSetting'), // placeholder
       'src/screens/profileAndSettings/profileAndSettings.html', // HTML
       'src/screens/profileAndSettings/profileAndSettings.css',  // CSS
