@@ -14,9 +14,9 @@ const NOTIFIED_PREFIX = 'audi_notified_';
 
 // Health reminders configuration
 const HEALTH_REMINDERS = {
-	water: { title: '💧 Water Reminder', message: 'Time for a sip! Take a few sips of water 💦', intervalSec: 10 },  // 10 sec for testing
-	eye: { title: '👀 Eye Break', message: 'Look away from the screen for 20 seconds.', intervalSec: 10 },
-	stretch: { title: '🏃 Walk / Stretch Break', message: 'Stand up and stretch for 2–3 minutes 🧘‍♂️', intervalSec: 10 }
+	water: { title: '💧 Water Reminder', message: 'Time for a sip! Stay hydrated by drinking a few sips of water', intervalSec: 3000 },  // 10 sec for testing
+	eye: { title: '👀 Eye Break', message: 'Take a short 20-second break: look away from your screen and relax your eyes', intervalSec: 1200 },
+	stretch: { title: '🏃 Walk / Stretch Break', message: 'Take a quick 1–2 minute break: stretch, walk around, or grab some coffee/tea', intervalSec: 4500 }
 };
 
 // Track active health reminders to avoid duplicates

@@ -49,12 +49,12 @@ function updateHeaderProgress(inDate) {
 
 	if (progress < 0.5) {
 		// Less than 50% done → yellow + gray
-		progressColor = '#ece07c';
+		progressColor = '#fdffbb';
 		remainingColor = '#eee';
 	} else {
 		// 50% or more done → green + red
-		progressColor = '#8bd98b';
-		remainingColor = '#f08080';
+		progressColor = '#c1ffc5';
+		remainingColor = '#ffc1c4';
 	}
 
 	headerBar.style.background = `linear-gradient(to right, 
