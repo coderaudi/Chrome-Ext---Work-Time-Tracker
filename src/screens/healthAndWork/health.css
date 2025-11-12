@@ -183,3 +183,102 @@
 		color: var(--accent);
 		display: none;
 }
+/* ===== ACTIVE REMINDERS ===== */
+.health-box.active {
+	border: 2px solid var(--accent);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+	transform: scale(1.05);
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+/* ---------------- WATER REMINDER ---------------- */
+.health-box[data-type="water"] .water {
+	position: absolute;
+	bottom: 0;
+	left: -50%;
+	width: 200%;
+	height: 50%;
+	/* half-filled glass */
+	background: linear-gradient(135deg, #4fc3f7, #81d4fa);
+	border-radius: 50% 50% 0 0;
+	opacity: 0.6;
+	pointer-events: none;
+	z-index: 0;
+	display: none;
+}
+
+.health-box.active[data-type="water"] .water {
+	display: block;
+	animation: wave 3s linear infinite;
+}
+
+@keyframes wave {
+	0% {
+		transform: translateX(-50%) rotate(0deg);
+	}
+
+	50% {
+		transform: translateX(-45%) rotate(2deg);
+	}
+
+	100% {
+		transform: translateX(-50%) rotate(0deg);
+	}
+}
+
+/* ---------------- EYE REMINDER ---------------- */
+.health-box.active[data-type="eye"] {
+	animation: eye-blink 2s infinite;
+}
+
+@keyframes eye-blink {
+
+	0%,
+	50%,
+	100% {
+		transform: scaleY(1);
+	}
+
+	25%,
+	75% {
+		transform: scaleY(0.85);
+	}
+
+	/* slight “blink” effect */
+}
+
+/* ---------------- STRETCH REMINDER ---------------- */
+.health-box.active[data-type="stretch"] {
+	animation: stretch-shake 0.5s ease-in-out infinite;
+}
+
+@keyframes stretch-shake {
+	0% {
+		transform: translateX(0);
+	}
+
+	25% {
+		transform: translateX(-4px) rotate(-2deg);
+	}
+
+	50% {
+		transform: translateX(4px) rotate(2deg);
+	}
+
+	75% {
+		transform: translateX(-2px) rotate(-1deg);
+	}
+
+	100% {
+		transform: translateX(0);
+	}
+}
+
+/* Ensure icon and title stay above animations */
+.health-box .icon,
+.health-box .title {
+	position: relative;
+	z-index: 1;
+}
