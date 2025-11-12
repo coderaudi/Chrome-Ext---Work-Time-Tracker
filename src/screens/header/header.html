@@ -1,14 +1,22 @@
-<!-- Header fragment -->
+<!-- src/screens/header/header.html -->
 <header class="header-bar">
   <div class="header-left">
-    <h1 id="headerTitle"><strong>Your</strong> Work Assistance</h1>
+    <h1 id="headerTitle"><strong>Your</strong> Work Assistant</h1>
     <div class="small" id="todayLine"></div>
   </div>
   <div class="header-right">
-    <button id="testBtn" class="notify-btn" title="Send Test Notification">
+    <!-- Theme toggle -->
+    <div class="theme-toggle">
+      <button class="theme-btn" id="themeToggle" aria-pressed="false">
+        <span class="icon sun">🌞</span>
+        <span class="icon moon">🌙</span>
+      </button>
+    </div>
+    
+    <!-- <button id="testBtn" class="notify-btn" title="Send Test Notification">
       <svg xmlns="http://www.w3.org/2000/svg" class="bell-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
-    </button>
+    </button> -->
   </div>
 </header>

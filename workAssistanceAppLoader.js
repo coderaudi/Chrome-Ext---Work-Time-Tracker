@@ -144,6 +144,13 @@
       'src/screens/profileAndSettings/profileAndSettings.js'    // JS
     );
 
+    await componentLoader.loadInto(
+      document.getElementById('screen-tabs'),
+      'src/components/tabs/tabs.html',  // HTML for tabs
+      'src/components/tabs/tabs.css',   // CSS
+      'src/components/tabs/tabs.js'     // JS
+    );
+
 
     await loadFragment('screen-health', 'src/screens/healthAndWork/health.html');
     await loadFragment('screen-checkin', 'src/screens/workCheckIn/checkIn.html');
@@ -213,3 +220,56 @@
 
   } catch (e) { console.warn('Loader error', e) }
 })();
+
+
+// -----------------------------
+// Sub-tabs & Profile Section Logic
+// -----------------------------
+function initSubTabs() {
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabContents.forEach(tab => {
+    const subTabButtons = tab.querySelectorAll('.sub-tab-button');
+    const subTabContents = tab.querySelectorAll('.sub-tab-content');
+
+    if (!subTabButtons.length) return;
+
+    subTabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.subtab;
+
+        // Deactivate all buttons and contents
+        subTabButtons.forEach(b => b.classList.remove('active'));
+        subTabContents.forEach(c => c.classList.remove('active'));
+
+        // Activate clicked
+        btn.classList.add('active');
+        const content = tab.querySelector(`#${target}`);
+        if (content) content.classList.add('active');
+
+        // Move Profile & Settings into Step 3
+        const profileSection = document.getElementById('screen-profileAndSetting');
+        if (!profileSection) return;
+
+        if (target === 'step3' && content && !content.contains(profileSection)) {
+          content.appendChild(profileSection);
+        } else {
+          // Move back to main container if not step3
+          const container = document.querySelector('.container');
+          if (container && !container.contains(profileSection)) {
+            container.appendChild(profileSection);
+          }
+        }
+      });
+    });
+  });
+}
+
+// Wait until all components are loaded before initializing sub-tabs
+window.addEventListener('load', () => {
+  // Small delay to ensure loader injected HTML
+  setTimeout(() => {
+    initSubTabs();
+  }, 300);
+});
+
