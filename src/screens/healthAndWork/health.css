@@ -147,7 +147,7 @@
 	text-align: center;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	transition: transform 0.2s, box-shadow 0.2s;
-	height: 140px;
+	height: 100px;
 	/* fixed height for uniformity */
 	cursor: pointer;
 }

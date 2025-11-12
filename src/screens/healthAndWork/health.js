@@ -1,6 +1,8 @@
 // src/screens/healthAndWork/health.js
 
-// Collapsible behavior for Health & Work card
+// ------------------------------
+// Section 0: Collapsible Card
+// ------------------------------
 function attachHealthHandlers() {
   const card = document.getElementById('healthCard');
   if (!card) return;
@@ -17,90 +19,79 @@ function attachHealthHandlers() {
 attachHealthHandlers();
 new MutationObserver(() => attachHealthHandlers()).observe(document.body, { childList: true, subtree: true });
 
-// ===== Reminder intervals =====
-const reminderIntervals = {};
+// ------------------------------
+// Section 1: Reminder Handling
+// ------------------------------
+const ACTIVE_KEY = 'activeHealthReminders';
+const reminderBoxes = document.querySelectorAll('.health-box');
 
-// Reminder config for each type
-const REMINDERS = {
-  water: {
-    title: '💧 Water Reminder',
-    message: 'Time for a sip! Take a few sips of water 💦',
-    // interval: 60 * 60 * 1000 // 1 hour
-    interval: 10 * 1000  // 10 seconds for testing
-
-  },
-  eye: {
-    title: '👀 Eye Break',
-    message: 'Look away from the screen for 20 seconds (20-20-20 rule).',
-    // interval: 20 * 60 * 1000 // 20 minutes
-    interval: 10 * 1000  // 10 seconds for testing
-
-  },
-  stretch: {
-    title: '🏃 Walk / Stretch Break',
-    message: 'Stand up and stretch or walk for 2–3 minutes 🧘‍♂️',
-    interval: 78 * 60 * 1000 // ~1.3 hours
-  }
-};
-
-// Show desktop notification
-function showNotification(title, message) {
-  if (Notification.permission === 'granted') {
-    new Notification(title, { body: message, icon: 'icons/icon128.png' });
-  } else if (Notification.permission !== 'denied') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') new Notification(title, { body: message, icon: 'icons/icon128.png' });
-      else alert(`${title}\n\n${message}`); // fallback
-    });
-  } else {
-    alert(`${title}\n\n${message}`); // fallback
-  }
-}
-
-// Toggle a reminder
+// Toggle a single reminder
 function toggleReminder(type, box) {
-  if (reminderIntervals[type]) {
-    clearInterval(reminderIntervals[type]);
-    delete reminderIntervals[type];
+  const isActive = box.classList.contains('active');
+
+  if (isActive) {
+    // Stop this reminder in background
+    chrome.runtime.sendMessage({ type: 'STOP_HEALTH_REMINDER', reminderType: type }, (resp) => {
+      console.log(resp?.message || `${type} stopped`);
+    });
     box.classList.remove('active');
   } else {
-    const { title, message, interval } = REMINDERS[type];
-
-    // Show first notification immediately
-    showNotification(title, message);
-
-    // Start interval
-    reminderIntervals[type] = setInterval(() => showNotification(title, message), interval);
-
+    // Start this reminder in background
+    chrome.runtime.sendMessage({ type: 'START_HEALTH_REMINDER', reminderType: type }, (resp) => {
+      console.log(resp?.message || `${type} started`);
+    });
     box.classList.add('active');
   }
+
+  // Save current active reminders
+  saveActiveReminders();
+}
+
+// Persist active reminders to storage
+function saveActiveReminders() {
+  const active = [...document.querySelectorAll('.health-box.active')].map(b => b.dataset.type);
+  chrome.storage.local.set({ [ACTIVE_KEY]: active });
+}
+
+// Restore active reminders when popup opens
+function restoreActiveReminders() {
+  chrome.storage.local.get(ACTIVE_KEY, (res) => {
+    const active = res[ACTIVE_KEY] || [];
+    reminderBoxes.forEach(box => {
+      const type = box.dataset.type;
+      if (active.includes(type)) {
+        box.classList.add('active');
+        // Ensure background knows this reminder should be active
+        chrome.runtime.sendMessage({ type: 'START_HEALTH_REMINDER', reminderType: type });
+      } else {
+        box.classList.remove('active');
+        chrome.runtime.sendMessage({ type: 'STOP_HEALTH_REMINDER', reminderType: type });
+      }
+    });
+  });
 }
 
 
-// Attach buttons
-// Attach click event to the whole card instead of the button
-document.querySelectorAll('.health-box').forEach(box => {
+// Attach click events to health boxes
+reminderBoxes.forEach(box => {
   const type = box.dataset.type;
-  box.addEventListener('click', () => {
-    toggleReminder(type, box);
-  });
+  box.addEventListener('click', () => toggleReminder(type, box));
 });
 
+restoreActiveReminders();
 
+// ------------------------------
+// Section 2: Stop All Reminders
+// ------------------------------
 const stopBtn = document.getElementById('stopAllBtn');
 
 if (stopBtn) {
-  stopBtn.addEventListener('click', stopAllReminders);
-}
-
-function stopAllReminders() {
-  chrome.runtime.sendMessage({ type: 'STOP_ALL_HEALTH_REMINDERS' }, (resp) => {
-    console.log(resp.message);
-
-    // Reset all buttons UI
-    document.querySelectorAll('.reminder-btn').forEach(btn => {
-      btn.classList.remove('active');
-      btn.textContent = 'Start';
+  stopBtn.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'STOP_ALL_HEALTH_REMINDERS' }, (resp) => {
+      console.log(resp?.message || 'All health reminders stopped');
+      // Reset UI
+      reminderBoxes.forEach(btn => btn.classList.remove('active'));
+      saveActiveReminders();
     });
   });
 }

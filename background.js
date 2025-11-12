@@ -205,6 +205,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResp) => {
 			break;
 		}
 
+		// --------------------------
+		// STOP a single health reminder
+		// --------------------------
+		case 'STOP_HEALTH_REMINDER': {
+			const type = msg.reminderType;
+			if (type && activeHealthReminders[type]) {
+				chrome.alarms.clear('health_' + type, cleared => {
+					if (cleared) console.log(`${type} reminder stopped`);
+				});
+				delete activeHealthReminders[type];
+			}
+			sendResp({ ok: true, message: `${type} reminder stopped` });
+			break;
+		}
+
+
 		default:
 			console.warn('Unknown message type:', msg.type);
 			break;
