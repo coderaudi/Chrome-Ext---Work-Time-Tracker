@@ -9,7 +9,7 @@ async function hashPassword(password) {
 	return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Function to update header H1 based on saved name
+// Update header H1 based on saved name
 function updateHeaderName() {
 	const headerH1 = document.querySelector('.header-bar h1');
 	if (!headerH1) return;
@@ -24,51 +24,60 @@ function updateHeaderName() {
 	}
 }
 
-// Save profile settings to Chrome storage
+// Save profile settings to Chrome storage and localStorage
 async function saveProfile() {
-	const name = document.getElementById('userName').value.trim();
-	const password = document.getElementById('userPassword').value.trim();
+	const name = document.getElementById('profileName').value.trim();
+	const password = document.getElementById('profilePassword').value.trim();
+	const reminderSelect = document.getElementById('profileDefaultReminder');
 
-	// Get checked reminders
-	const activeReminders = Array.from(document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]:checked'))
-		.map(cb => cb.dataset.type);
+	// Save locally
+	const profileData = {
+		name,
+		password,
+		defaultReminder: reminderSelect.value
+	};
+	localStorage.setItem('workAssistProfile', JSON.stringify(profileData));
 
+	// Update header dynamically
+	updateHeaderName();
+
+	// Save to Chrome storage with password hash
 	const dataToStore = {
 		user: {
 			name,
 			passwordHash: password ? await hashPassword(password) : undefined,
-			reminders: activeReminders
+			reminders: [] // can add reminder checkboxes if needed
 		}
 	};
-
 	chrome.storage.local.set(dataToStore, () => {
 		const status = document.getElementById('statusMsg');
-		status.textContent = '✅ Settings saved!';
-		setTimeout(() => status.textContent = '', 2000);
-	});
-}
-
-// Load saved profile from Chrome storage
-function loadProfile() {
-	chrome.storage.local.get('user', ({ user }) => {
-		if (!user) return;
-		if (user.name) document.getElementById('userName').value = user.name;
-		if (user.reminders) {
-			document.querySelectorAll('.reminder-checkboxes input[type="checkbox"]').forEach(cb => {
-				cb.checked = user.reminders.includes(cb.dataset.type);
-			});
+		if (status) {
+			status.textContent = '✅ Settings saved!';
+			setTimeout(() => status.textContent = '', 2000);
 		}
 	});
 
-	// Also update header on load
-	updateHeaderName();
+	// Show small green message
+	const card = document.getElementById('profileCard');
+	let msg = card.querySelector('.save-msg');
+	if (!msg) {
+		msg = document.createElement('div');
+		msg.className = 'save-msg';
+		card.querySelector('.profile-form').appendChild(msg);
+	}
+	msg.textContent = '✅ Settings saved locally';
+	msg.style.color = 'green';
+	msg.style.fontSize = '12px';
+	msg.style.marginTop = '6px';
+	setTimeout(() => { msg.textContent = ''; }, 3000);
 }
 
-// Attach event handlers and collapsible behavior
+// Attach toggle and save button handlers
 function attachProfileHandlers() {
 	const card = document.getElementById('profileCard');
 	if (!card) return;
 
+	// Collapsible toggle
 	const toggle = card.querySelector('.health-toggle');
 	if (toggle && !toggle.dataset.attached) {
 		toggle.dataset.attached = '1';
@@ -78,54 +87,27 @@ function attachProfileHandlers() {
 		});
 	}
 
-	const nameInput = document.getElementById('profileName');
-	const passwordInput = document.getElementById('profilePassword');
-	const reminderSelect = document.getElementById('profileDefaultReminder');
+	// Save button
 	const saveBtn = document.getElementById('saveProfileBtn');
-
-	// Load saved profile from localStorage
-	const savedProfile = JSON.parse(localStorage.getItem('workAssistProfile') || '{}');
-	if (savedProfile.name) nameInput.value = savedProfile.name;
-	if (savedProfile.password) passwordInput.value = savedProfile.password;
-	if (savedProfile.defaultReminder) reminderSelect.value = savedProfile.defaultReminder;
-
 	if (saveBtn && !saveBtn.dataset.attached) {
 		saveBtn.dataset.attached = '1';
-		saveBtn.addEventListener('click', () => {
-			const name = nameInput.value.trim();
-			const password = passwordInput.value.trim();
-			const defaultReminder = reminderSelect.value;
-
-			// Save locally
-			localStorage.setItem('workAssistProfile', JSON.stringify({ name, password, defaultReminder }));
-
-			// Update header dynamically
-			updateHeaderName();
-
-			// Show small green message
-			let msg = card.querySelector('.save-msg');
-			if (!msg) {
-				msg = document.createElement('div');
-				msg.className = 'save-msg';
-				card.querySelector('.profile-form').appendChild(msg);
-			}
-			msg.textContent = '✅ Settings saved locally';
-			msg.style.color = 'green';
-			msg.style.fontSize = '12px';
-			msg.style.marginTop = '6px';
-
-			// Auto-hide after 3s
-			setTimeout(() => { msg.textContent = ''; }, 3000);
-		});
+		saveBtn.addEventListener('click', saveProfile);
 	}
 }
 
-// Initial attachment
-attachProfileHandlers();
+// Load saved profile **once on page load**
+document.addEventListener('DOMContentLoaded', () => {
+	const savedProfile = JSON.parse(localStorage.getItem('workAssistProfile') || '{}');
+	if (savedProfile.name) document.getElementById('profileName').value = savedProfile.name;
+	if (savedProfile.password) document.getElementById('profilePassword').value = savedProfile.password;
+	if (savedProfile.defaultReminder) document.getElementById('profileDefaultReminder').value = savedProfile.defaultReminder;
+
+	// Update header
+	updateHeaderName();
+
+	// Attach toggle and save button handlers
+	attachProfileHandlers();
+});
+
+// Observe DOM changes in case the profile card is dynamically loaded
 new MutationObserver(() => attachProfileHandlers()).observe(document.body, { childList: true, subtree: true });
-
-// Event listener for Chrome storage save
-document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
-
-// Load profile on DOM content loaded
-document.addEventListener('DOMContentLoaded', loadProfile);
