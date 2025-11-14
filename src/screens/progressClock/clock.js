@@ -55,6 +55,7 @@ function updateHeaderProgress(inDate) {
 		// 50% or more done → green + red
 		progressColor = '#c1ffc5';
 		remainingColor = '#ffc1c4';
+		//updated code for color
 	}
 
 	headerBar.style.background = `linear-gradient(to right, 
